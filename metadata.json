@@ -1,0 +1,5 @@
+{
+  "name": "Newsator",
+  "description": "A smart news aggregator that uses Google Gemini to search, summarize, and categorize real-time news for specific regions into clean, readable topics.",
+  "requestFramePermissions": []
+}
