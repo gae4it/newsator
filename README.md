@@ -1,20 +1,52 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Newsator AI
 
-# Run and deploy your AI Studio app
+Real-time news aggregator powered by Google Gemini with Google Search Grounding.
 
-This contains everything you need to run your app locally.
+## Tech Stack
 
-View your app in AI Studio: https://ai.studio/apps/drive/1AGVpshyRF49d2zb5-euj8qKI02veMpSM
+- **React 19** + **TypeScript**
+- **Vite** (Build tool)
+- **Tailwind CSS v4** (Beta)
+- **Google Gemini API** (with Search Grounding)
+- **ESLint** + **Prettier**
 
-## Run Locally
+## Setup
 
-**Prerequisites:**  Node.js
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
+2. **Configure API Key:**
+   Create a `.env.local` file:
+   ```env
+   GEMINI_API_KEY=your_api_key_here
+   ```
+   Get your key from [Google AI Studio](https://aistudio.google.com/app/apikey).
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+3. **Run development server:**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000)
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production (⚠️ May fail with Tailwind 4 beta)
+- `npm run lint` - Run ESLint
+- `npm run format` - Format code with Prettier
+
+## Features
+
+- 🌍 Multi-region news (World, Europe, Germany, Italy, Spain, Switzerland)
+- 🔍 Real-time news via Google Search Grounding
+- 🌓 Dark mode support
+- ⚡ Fast caching (15 minutes)
+- 📱 Responsive design
+
+## Notes
+
+- **Tailwind CSS v4** is in beta - production builds may be unstable
+- The app uses **Google Gemini 2.0 Flash** model
+- News are fetched in real-time and summarized by AI
