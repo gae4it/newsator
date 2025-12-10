@@ -6,48 +6,18 @@ interface NewsCardFeedProps {
   category: NewsCategory;
 }
 
-// Category header images and gradients
-const categoryHeaders: Record<NewsCategory, { type: 'image' | 'gradient'; value: string }> = {
-  [NewsCategory.BREAKING]: { 
-    type: 'image', 
-    value: '/brain/fd7279ed-d60c-402b-8977-c9ffe2a25bcb/breaking_news_header_1765402089968.png' 
-  },
-  [NewsCategory.POLITICS]: { 
-    type: 'image', 
-    value: '/brain/fd7279ed-d60c-402b-8977-c9ffe2a25bcb/politics_header_1765402103997.png' 
-  },
-  [NewsCategory.ECONOMY]: { 
-    type: 'image', 
-    value: '/brain/fd7279ed-d60c-402b-8977-c9ffe2a25bcb/economy_header_1765402122554.png' 
-  },
-  [NewsCategory.BUSINESS]: { 
-    type: 'image', 
-    value: '/brain/fd7279ed-d60c-402b-8977-c9ffe2a25bcb/business_header_1765402177008.png' 
-  },
-  [NewsCategory.TECHNOLOGY]: { 
-    type: 'image', 
-    value: '/brain/fd7279ed-d60c-402b-8977-c9ffe2a25bcb/technology_header_1765402138943.png' 
-  },
-  [NewsCategory.CRIME]: { 
-    type: 'gradient', 
-    value: 'linear-gradient(135deg, #1f2937 0%, #374151 100%)' 
-  },
-  [NewsCategory.WORLD]: { 
-    type: 'gradient', 
-    value: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)' 
-  },
-  [NewsCategory.CLIMATE]: { 
-    type: 'gradient', 
-    value: 'linear-gradient(135deg, #059669 0%, #10b981 100%)' 
-  },
-  [NewsCategory.HEALTH]: { 
-    type: 'image', 
-    value: '/brain/fd7279ed-d60c-402b-8977-c9ffe2a25bcb/health_header_1765402152869.png' 
-  },
-  [NewsCategory.CULTURE]: { 
-    type: 'gradient', 
-    value: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)' 
-  },
+// Category header gradients
+const categoryHeaders: Record<NewsCategory, string> = {
+  [NewsCategory.BREAKING]: 'linear-gradient(135deg, #dc2626 0%, #f97316 100%)', // Red to Orange
+  [NewsCategory.POLITICS]: 'linear-gradient(135deg, #1e40af 0%, #6366f1 100%)', // Blue to Indigo
+  [NewsCategory.ECONOMY]: 'linear-gradient(135deg, #ca8a04 0%, #eab308 100%)', // Gold to Yellow
+  [NewsCategory.BUSINESS]: 'linear-gradient(135deg, #4338ca 0%, #6366f1 100%)', // Indigo gradient
+  [NewsCategory.TECHNOLOGY]: 'linear-gradient(135deg, #0891b2 0%, #06b6d4 100%)', // Cyan gradient
+  [NewsCategory.CRIME]: 'linear-gradient(135deg, #1f2937 0%, #374151 100%)', // Dark gray
+  [NewsCategory.WORLD]: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)', // Purple gradient
+  [NewsCategory.CLIMATE]: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', // Green gradient
+  [NewsCategory.HEALTH]: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)', // Teal gradient
+  [NewsCategory.CULTURE]: 'linear-gradient(135deg, #db2777 0%, #ec4899 100%)', // Pink gradient
 };
 
 const categoryColors: Record<NewsCategory, string> = {
@@ -68,20 +38,12 @@ export const NewsCardFeed: React.FC<NewsCardFeedProps> = ({ newsPoint, category 
   
   return (
     <article className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-all duration-300">
-      {/* Category Header Image */}
+      {/* Category Header Gradient */}
       <div className="h-32 relative overflow-hidden">
-        {header.type === 'image' ? (
-          <img 
-            src={header.value} 
-            alt={category}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div 
-            className="w-full h-full"
-            style={{ background: header.value }}
-          />
-        )}
+        <div 
+          className="w-full h-full"
+          style={{ background: categoryHeaders[category] }}
+        />
         {/* Category Badge */}
         <div className="absolute top-3 left-3">
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${categoryColors[category]}`}>

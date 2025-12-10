@@ -144,7 +144,7 @@ const App: React.FC = () => {
 
         {/* News Feed - Display all news points as individual cards */}
         {currentNews && !isLoading && selectedCategory && (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {currentNews.points.map((point, index) => (
               <NewsCardFeed 
                 key={index} 

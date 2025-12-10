@@ -27,8 +27,8 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
 }) => {
   return (
     <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
-      <div className="max-w-4xl mx-auto px-4 py-3">
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide max-w-6xl" style={{ scrollbarWidth: 'none' }}>
+      <div className="max-w-4xl md:max-w-5xl mx-auto px-4 py-3">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
           {Object.values(NewsCategory).map((category) => {
             const isSelected = selectedCategory === category;
             return (
