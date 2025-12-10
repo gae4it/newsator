@@ -4,7 +4,26 @@ export enum Region {
   GERMANY = 'Germany',
   ITALY = 'Italy',
   SPAIN = 'Spain',
-  SWITZERLAND = 'Switzerland'
+  SWITZERLAND = 'Switzerland',
+  USA = 'USA',
+  ASIA = 'Asia',
+  UK = 'UK',
+  BADEN_WUERTTEMBERG = 'Baden-Württemberg',
+  BAYERN = 'Bayern',
+  LOMBARDIA = 'Lombardia'
+}
+
+export enum NewsCategory {
+  BREAKING = 'Breaking News',
+  POLITICS = 'Politics',
+  ECONOMY = 'Economy & Finance',
+  BUSINESS = 'Business & Industry',
+  TECHNOLOGY = 'Technology',
+  CRIME = 'Crime',
+  WORLD = 'World',
+  CLIMATE = 'Climate & Environment',
+  HEALTH = 'Health',
+  CULTURE = 'Culture'
 }
 
 export interface NewsPoint {
