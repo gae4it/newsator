@@ -157,8 +157,38 @@ const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-6 py-4 mt-12 text-center text-slate-400 dark:text-slate-500 text-xs transition-colors duration-300">
-        <p>Powered by Google Gemini • News via Google Search Grounding</p>
+      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-6 py-4 mt-12 text-center transition-colors duration-300">
+        <div className="max-w-4xl mx-auto">
+          
+          <div className="flex items-center justify-center gap-4 text-xs">
+            <a 
+              href="/about.html" 
+              className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              About
+            </a>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
+            <a 
+              href="/privacy.html" 
+              className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              Privacy Policy
+            </a>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
+            <a 
+              href="/terms.html" 
+              className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              Terms of Service
+            </a>
+          </div>
+          <p className="text-slate-400 dark:text-slate-500 text-xs mt-2 mb-2">
+            Powered by Google Gemini • News via Google Search Grounding
+          </p>
+          <p className="text-slate-400 dark:text-slate-500 text-xs mt-2">
+            Educational Project • No Cookies • No Tracking
+          </p>
+        </div>
       </footer>
 
     </div>
