@@ -3,14 +3,14 @@ import { Region, NewsCategory, NewsTopic } from './types';
 import { fetchNewsSummary } from './services/geminiService';
 import { RegionSelector } from './components/RegionSelector';
 import { CategorySelector } from './components/CategorySelector';
-import { NewsCard } from './components/NewsCard';
+import { NewsCardFeed } from './components/NewsCardFeed';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 import { ThemeToggle } from './components/ThemeToggle';
 
 const App: React.FC = () => {
-  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<Region>(Region.WORLD); // Default to World
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory | null>(null);
-  const [currentCard, setCurrentCard] = useState<NewsTopic | null>(null);
+  const [currentNews, setCurrentNews] = useState<NewsTopic | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -43,124 +43,124 @@ const App: React.FC = () => {
 
   const handleRegionSelect = useCallback((region: Region) => {
     setSelectedRegion(region);
-    // Clear category and card when switching regions
+    // Clear category and news when switching regions
     setSelectedCategory(null);
-    setCurrentCard(null);
+    setCurrentNews(null);
     setError(null);
   }, []);
 
   const handleCategorySelect = useCallback(async (category: NewsCategory) => {
-    if (!selectedRegion) return;
-
     // If same category is clicked, do nothing
-    if (category === selectedCategory && currentCard) return;
+    if (category === selectedCategory && currentNews) return;
 
     setSelectedCategory(category);
     setIsLoading(true);
     setError(null);
-    setCurrentCard(null);
+    setCurrentNews(null);
 
     try {
       const data = await fetchNewsSummary(selectedRegion, category);
-      setCurrentCard(data);
+      setCurrentNews(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, currentCard]);
+  }, [selectedRegion, selectedCategory, currentNews]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 pb-12 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Header */}
-        <header className="pt-10 pb-4 relative">
-          <div className="absolute right-0 top-10">
-            <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-          </div>
-          <div className="text-center">
-            <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+      
+      {/* Header */}
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 sticky top-0 z-20 transition-colors duration-300">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
+          <div>
+            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               <span className="text-blue-600 dark:text-blue-400">News</span>ator AI
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg">
-              Real-time news summaries curated by Gemini, grounded in Google Search.
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Real-time news powered by Gemini
             </p>
           </div>
-        </header>
+          <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+        </div>
+      </header>
 
-        {/* Region Navigation */}
-        <RegionSelector 
-          selectedRegion={selectedRegion} 
-          onSelect={handleRegionSelect} 
-          disabled={isLoading}
-        />
+      {/* Region Selector - Circular Avatars */}
+      <RegionSelector 
+        selectedRegion={selectedRegion} 
+        onSelect={handleRegionSelect} 
+        disabled={isLoading}
+      />
 
-        {/* Category Navigation - Only show when region is selected */}
-        {selectedRegion && (
-          <CategorySelector
-            selectedCategory={selectedCategory}
-            onSelect={handleCategorySelect}
-            disabled={isLoading}
-          />
+      {/* Category Selector - Horizontal Chips */}
+      <CategorySelector
+        selectedCategory={selectedCategory}
+        onSelect={handleCategorySelect}
+        disabled={isLoading}
+      />
+
+      {/* Main Content - News Feed */}
+      <main className="max-w-4xl mx-auto px-4 py-6">
+        {/* No category selected */}
+        {!selectedCategory && !isLoading && (
+          <div className="flex flex-col items-center justify-center py-20 opacity-60">
+            <div className="inline-block p-6 rounded-full bg-slate-200 dark:bg-slate-800 mb-4">
+              <span className="text-4xl">📰</span>
+            </div>
+            <h2 className="text-xl font-medium text-slate-700 dark:text-slate-300">
+              Select a category
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+              Choose from the categories above to load more specific news.
+            </p>
+          </div>
         )}
 
-        {/* Content Area */}
-        <main>
-          {/* Initial State - No region selected */}
-          {!selectedRegion && (
-            <div className="text-center py-20 opacity-60">
-              <div className="inline-block p-6 rounded-full bg-slate-200 dark:bg-slate-800 mb-4">
-                <span className="text-4xl">🌍</span>
-              </div>
-              <h2 className="text-xl font-medium text-slate-700 dark:text-slate-300">Select a region to start</h2>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="space-y-4">
+            <LoadingSkeleton />
+            <LoadingSkeleton />
+            <LoadingSkeleton />
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="flex items-center justify-center py-12">
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 p-6 rounded-lg max-w-lg border border-red-100 dark:border-red-900">
+              <p className="font-semibold mb-2">Unable to fetch news</p>
+              <p className="text-sm mb-4">{error}</p>
+              <button 
+                onClick={() => selectedCategory && handleCategorySelect(selectedCategory)}
+                className="px-4 py-2 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-md text-sm hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+              >
+                Try Again
+              </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Region selected but no category */}
-          {selectedRegion && !selectedCategory && !isLoading && (
-            <div className="text-center py-20 opacity-60">
-              <div className="inline-block p-6 rounded-full bg-slate-200 dark:bg-slate-800 mb-4">
-                <span className="text-4xl">📰</span>
-              </div>
-              <h2 className="text-xl font-medium text-slate-700 dark:text-slate-300">
-                Select a category to view news
-              </h2>
-            </div>
-          )}
+        {/* News Feed - Display all news points as individual cards */}
+        {currentNews && !isLoading && selectedCategory && (
+          <div className="space-y-4">
+            {currentNews.points.map((point, index) => (
+              <NewsCardFeed 
+                key={index} 
+                newsPoint={point} 
+                category={selectedCategory}
+              />
+            ))}
+          </div>
+        )}
+      </main>
 
-          {/* Loading State */}
-          {isLoading && <LoadingSkeleton />}
+      {/* Footer */}
+      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-6 py-4 mt-12 text-center text-slate-400 dark:text-slate-500 text-xs transition-colors duration-300">
+        <p>Powered by Google Gemini • News via Google Search Grounding</p>
+      </footer>
 
-          {/* Error State */}
-          {error && (
-            <div className="text-center py-12">
-              <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 p-4 rounded-lg inline-block max-w-lg border border-red-100 dark:border-red-900">
-                <p className="font-semibold mb-2">Unable to fetch news</p>
-                <p className="text-sm">{error}</p>
-                <button 
-                  onClick={() => selectedRegion && selectedCategory && handleCategorySelect(selectedCategory)}
-                  className="mt-4 px-4 py-2 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-md text-sm hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                >
-                  Try Again
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Single Card Display */}
-          {currentCard && !isLoading && (
-            <div className="max-w-2xl mx-auto">
-              <NewsCard topic={currentCard} />
-            </div>
-          )}
-        </main>
-
-        <footer className="mt-20 pt-8 border-t border-slate-200 dark:border-slate-800 text-center text-slate-400 dark:text-slate-500 text-sm">
-          <p>Powered by Google Gemini & Vertex AI • News provided via Google Search Grounding</p>
-        </footer>
-
-      </div>
     </div>
   );
 };
