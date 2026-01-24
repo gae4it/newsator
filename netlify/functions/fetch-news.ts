@@ -77,6 +77,9 @@ export const handler: Handler = async (
       }
     }
 
+    // Limit excludeTitles to avoid prompt bloat
+    const limitedExcludeTitles = excludeTitles.slice(-20);
+
     const isOverview = mode === "Overview";
     const itemCount = 10;
     let finalData;
@@ -91,22 +94,18 @@ export const handler: Handler = async (
       
       const genModel = genAI.getGenerativeModel({ 
         model: geminiModelId,
-        systemInstruction: `You are a professional news aggregator. Output strictly valid JSON. Always translate EVERYTHING (titles and summaries) to ${language}.`
+        systemInstruction: `You are a professional news aggregator. Output strictly valid JSON. Language: ${language}.`,
+        generationConfig: {
+          responseMimeType: "application/json",
+        }
       });
 
       const promptText = `
-        Fetch the 10 latest news for:
-        Region: ${region}
-        Category: ${category}
-        Mode: ${mode}
-        
-        REQUIREMENTS:
-        - LANGUAGE: EVERYTHING MUST BE IN ${language.toUpperCase()}.
-        - NO-REPEAT: DO NOT include: [${excludeTitles.join(", ")}].
-        - OUTPUT: ${isOverview ? "ONLY Titles and Sources" : "Title, neutral Summary (max 2 sentences), and REAL Source Name/URL."}
-        
-        JSON FORMAT:
-        { "points": [ { "summary": "...", "title": "...", "sourceName": "...", "sourceUrl": "..." } ] }
+        Latest news for: Region ${region}, Category ${category}, Mode ${mode}.
+        - Language: ${language}
+        - Quantity: ${itemCount} items
+        - Avoid: [${limitedExcludeTitles.join(", ")}]
+        - Format: { "points": [ { "title": "Headline", "summary": "1-2 sentences", "sourceName": "Source", "sourceUrl": "URL" } ] }
       `;
 
       const result = await genModel.generateContent({
@@ -114,8 +113,7 @@ export const handler: Handler = async (
         tools: [{ googleSearch: {} }] as any
       });
 
-      const responseText = result.response.text();
-      finalData = parseJSONResponse(responseText, cacheKey);
+      finalData = parseJSONResponse(result.response.text(), cacheKey);
 
     } else {
       // OpenRouter Logic with RSS Bridge
@@ -136,26 +134,15 @@ export const handler: Handler = async (
 
       // Optimization: Limit to 5 items for speed (prevents 502)
       const realNewsItems = feed.items.slice(0, 5).map(item => ({
-        title: item.title?.substring(0, 120),
+        title: item.title?.substring(0, 100),
         link: item.link
       }));
 
-      // 2. Use Llama/Mistral as processor
-      const orModelId = model === "Mistral" 
-        ? "mistralai/mistral-7b-instruct" 
-        : "meta-llama/llama-3.1-8b-instruct";
-
       const orPrompt = `
-        Translate and format these raw RSS news items.
-        Target Language: ${language}
-        Exclude these titles: [${excludeTitles.join(", ")}]
-        
-        DATA:
-        ${JSON.stringify(realNewsItems)}
-
-        JSON FORMAT REQUIREMENT:
-        { "points": [ { "summary": "1 sentence in ${language}", "title": "Headline in ${language}", "sourceName": "News Source", "sourceUrl": "Link" } ] }
-        ONLY OUTPUT JSON. NO EXTRA TEXT.
+        Format these RSS items as valid JSON in ${language}.
+        Avoid: [${limitedExcludeTitles.join(", ")}]
+        DATA: ${JSON.stringify(realNewsItems)}
+        JSON: { "points": [ { "title": "...", "summary": "...", "sourceName": "...", "sourceUrl": "..." } ] }
       `;
 
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -165,25 +152,19 @@ export const handler: Handler = async (
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: orModelId,
+          model: model === "Mistral" ? "mistralai/mistral-7b-instruct" : "meta-llama/llama-3.1-8b-instruct",
           messages: [
-            { role: "system", content: "You are a professional news editor. You only output valid JSON. No conversation." },
+            { role: "system", content: "Professional news editor. Output JSON only." },
             { role: "user", content: orPrompt }
           ],
           response_format: { type: "json_object" },
-          temperature: 0.1 // Stricter output
+          temperature: 0.1
         })
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`OpenRouter API error: ${response.status} ${errorText.substring(0, 100)}`);
-      }
-
+      if (!response.ok) throw new Error(`OpenRouter error: ${response.status}`);
       const json = await response.json();
-      const rawText = json.choices[0]?.message?.content;
-      if (!rawText) throw new Error("Empty response from OpenRouter");
-      finalData = parseJSONResponse(rawText, cacheKey);
+      finalData = parseJSONResponse(json.choices[0]?.message?.content || "", cacheKey);
     }
 
     // Cache and return
