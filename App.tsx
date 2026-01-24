@@ -6,6 +6,7 @@ import { CategorySelector } from './components/CategorySelector';
 import { NewsCardFeed } from './components/NewsCardFeed';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 import { ThemeToggle } from './components/ThemeToggle';
+import { ProgressBar } from './components/ProgressBar';
 
 const App: React.FC = () => {
   const [selectedRegion, setSelectedRegion] = useState<Region>(Region.WORLD); // Default to World
@@ -133,6 +134,8 @@ const App: React.FC = () => {
         onSelect={handleCategorySelect}
         disabled={isLoading}
       />
+
+      <ProgressBar isLoading={isLoading} />
 
       {/* Main Content - News Feed */}
       <main className="max-w-4xl mx-auto px-4 py-6">
