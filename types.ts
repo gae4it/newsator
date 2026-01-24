@@ -13,6 +13,11 @@ export enum Region {
   LOMBARDIA = 'Lombardia'
 }
 
+export enum ViewMode {
+  SUMMARY = 'Summary',
+  OVERVIEW = 'Overview'
+}
+
 export enum NewsCategory {
   BREAKING = 'Breaking News',
   POLITICS = 'Politics',

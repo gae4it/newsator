@@ -1,9 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Region, NewsCategory, NewsTopic } from './types';
+import { Region, NewsCategory, NewsTopic, ViewMode } from './types';
 import { fetchNewsSummary } from './services/geminiService';
 import { RegionSelector } from './components/RegionSelector';
 import { CategorySelector } from './components/CategorySelector';
 import { NewsCardFeed } from './components/NewsCardFeed';
+import { NewsHeadlineRow } from './components/NewsHeadlineRow';
+import { ModeSelector } from './components/ModeSelector';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ProgressBar } from './components/ProgressBar';
@@ -16,6 +18,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.SUMMARY);
 
   // Initialize Theme
   useEffect(() => {
@@ -61,7 +64,7 @@ const App: React.FC = () => {
     setCurrentNews(null);
 
     try {
-      const data = await fetchNewsSummary(selectedRegion, category);
+      const data = await fetchNewsSummary(selectedRegion, category, viewMode);
       setCurrentNews(data);
       setLastUpdated(new Date());
     } catch (err) {
@@ -69,7 +72,26 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, currentNews]);
+  }, [selectedRegion, selectedCategory, currentNews, viewMode]);
+
+  const handleModeChange = useCallback(async (mode: ViewMode) => {
+    setViewMode(mode);
+    if (!selectedCategory) return;
+
+    setIsLoading(true);
+    setError(null);
+    setCurrentNews(null);
+
+    try {
+      const data = await fetchNewsSummary(selectedRegion, selectedCategory, mode);
+      setCurrentNews(data);
+      setLastUpdated(new Date());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedRegion, selectedCategory]);
 
   const handleRefresh = useCallback(async () => {
     if (!selectedCategory || isLoading) return;
@@ -78,7 +100,7 @@ const App: React.FC = () => {
     setError(null);
     
     try {
-      const data = await fetchNewsSummary(selectedRegion, selectedCategory);
+      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode);
       setCurrentNews(data);
       setLastUpdated(new Date());
     } catch (err) {
@@ -86,7 +108,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, isLoading]);
+  }, [selectedRegion, selectedCategory, isLoading, viewMode]);
 
   const formatTimestamp = (date: Date | null): string => {
     if (!date) return '';
@@ -135,6 +157,12 @@ const App: React.FC = () => {
         disabled={isLoading}
       />
 
+      <ModeSelector 
+        selectedMode={viewMode} 
+        onSelect={handleModeChange} 
+        disabled={isLoading || !selectedCategory} 
+      />
+
       <ProgressBar isLoading={isLoading} />
 
       {/* Main Content - News Feed */}
@@ -179,7 +207,7 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* News Feed - Display all news points as individual cards */}
+        {/* News Feed - Display all news points as individual cards or rows */}
         {currentNews && !isLoading && selectedCategory && (
           <>
             {/* Header with timestamp and refresh button */}
@@ -208,15 +236,27 @@ const App: React.FC = () => {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {currentNews.points.map((point, index) => (
-                <NewsCardFeed 
-                  key={index} 
-                  newsPoint={point} 
-                  category={selectedCategory}
-                />
-              ))}
-            </div>
+            {viewMode === ViewMode.SUMMARY ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {currentNews.points.map((point, index) => (
+                  <NewsCardFeed 
+                    key={index} 
+                    newsPoint={point} 
+                    category={selectedCategory}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white dark:bg-slate-900/50 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+                {currentNews.points.map((point, index) => (
+                  <NewsHeadlineRow 
+                    key={index} 
+                    newsPoint={point} 
+                    category={selectedCategory}
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
       </main>

@@ -37,7 +37,7 @@ export const handler: Handler = async (
 
   try {
     // Parse request body
-    const { region, category } = JSON.parse(event.body || "{}");
+    const { region, category, mode = "Summary" } = JSON.parse(event.body || "{}");
 
     if (!region || !category) {
       return {
@@ -48,7 +48,7 @@ export const handler: Handler = async (
     }
 
     // Check cache
-    const cacheKey = `${region}-${category}`;
+    const cacheKey = `${region}-${category}-${mode}`;
     const cached = newsCache.get(cacheKey);
     const now = Date.now();
 
@@ -61,7 +61,7 @@ export const handler: Handler = async (
       };
     }
 
-    // Get API key from environment variable (server-side only)
+    // Get API key from environment variable
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new Error("API Key is not configured on server");
@@ -69,41 +69,51 @@ export const handler: Handler = async (
 
     const ai = new GoogleGenAI({ apiKey });
 
+    const isOverview = mode === "Overview";
+    const itemCount = isOverview ? "30-50" : "5-10";
+    
     const prompt = `
-    You are a professional news aggregator. Fetch the latest news for:
+    You are a professional news aggregator with access to Google Search. Fetch the latest news for:
     
     Region: ${region}
     Category: ${category}
+    Mode: ${mode}
     
     REQUIREMENTS:
-    - Find 5-10 recent news stories from the last 48-100 hours
-    - Focus specifically on "${category}" news for "${region}"
-    - Provide neutral, factual summaries (1-2 sentences each)
-    - Include REAL source names and URLs from Google Search results
-    - NO placeholders or fabricated sources
+    - MODE: ${isOverview ? "OVERVIEW (Headline list)" : "SUMMARY (Detailed stories)"}
+    - COUNT: Find and return ${itemCount} distinct news items from the last 24-100 hours.
+    - PRIORITIZATION: 1. International/National News Agencies (Wire services like Reuters, AP, AFP, ANSA, DPA, EFE, Bloomberg). 2. Major Newspapers and Broadcasters.
+    - TRANSLATION: Ensure all content is in English. Translate local headlines from "${region}" to English.
+    - QUALITY: Provide the most relevant and high-profile stories first.
+    
+    ${isOverview 
+      ? "- OUTPUT: For each item, provide ONLY a concise TITLE and the REAL Source Name/URL." 
+      : "- OUTPUT: For each item, provide a TITLE, a 1-2 sentence neutral SUMMARY, and the REAL Source Name/URL."}
     
     OUTPUT FORMAT - Return ONLY valid JSON:
     {
       "category": "${category}",
+      "mode": "${mode}",
       "points": [
         {
-          "summary": "Brief neutral summary of the news",
-          "sourceName": "Real source name (e.g., BBC, Reuters)",
-          "sourceUrl": "Real URL from search results"
+          "summary": "${isOverview ? "Just the headline title here" : "Brief neutral summary here"}",
+          "title": "Headline title",
+          "sourceName": "Real source name (e.g., Reuters, AP)",
+          "sourceUrl": "Real URL"
         }
       ]
     }
     
-    Return 5-10 items in the "points" array.
+    Return exactly ${itemCount} items in the "points" array. Ensure the "summary" field is used as requested.
   `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash", // Using 2.0-flash for high volume & speed
       contents: prompt,
       config: {
-        tools: [{ googleSearch: {} }], // Use Grounding to fetch real news
+        tools: [{ googleSearch: {} }],
         systemInstruction:
-          "You are a professional news aggregator. Output strictly valid JSON. Ensure all content is in English regardless of the region's native language.",
+          "You are a professional news aggregator. Output strictly valid JSON. Prioritize wire services (Reuters, AP, ANSA, etc.). Always translate to English.",
       },
     });
 
