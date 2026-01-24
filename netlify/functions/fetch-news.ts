@@ -69,13 +69,13 @@ export const handler: Handler = async (
 
     const ai = new GoogleGenAI({ apiKey });
 
-    // Map user-friendly model names to technical model names
+    // Map user-friendly model names to technical model names available in this environment
     const modelMapping: Record<string, string> = {
-      "Gemini 1.5": "gemini-1.5-flash",
-      "Gemini 2.0": "gemini-2.0-flash",
+      "Gemini 1.5": "gemini-flash-latest",     // Stable alias, usually points to 1.5 or newest flash
+      "Gemini 2.0": "gemini-2.0-flash-lite",   // Lite version often has more stable free quota
     };
     
-    const targetModel = modelMapping[model] || "gemini-1.5-flash";
+    const targetModel = modelMapping[model] || "gemini-2.5-flash";
 
     const isOverview = mode === "Overview";
     const itemCount = isOverview ? "30-50" : "5-10";
