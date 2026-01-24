@@ -1,5 +1,8 @@
 import type { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
 import { GoogleGenAI } from "@google/genai";
+import Parser from "rss-parser";
+
+const parser = new Parser();
 
 // In-memory cache to store results for 30 minutes
 const CACHE_DURATION_MS = 30 * 60 * 1000;
@@ -76,33 +79,6 @@ export const handler: Handler = async (
 
     const isOverview = mode === "Overview";
     const itemCount = 10;
-    const prompt = `
-      Fetch the latest news for:
-      Region: ${region}
-      Category: ${category}
-      Mode: ${mode}
-      Batch: ${isInitialLoad ? "Initial" : "Additional"}
-      
-      REQUIREMENTS:
-      - LANGUAGE: EVERYTHING (titles and summaries) MUST BE IN ${language.toUpperCase()}.
-      - QUANTITY: Return exactly ${itemCount} items.
-      - NO-REPEAT: DO NOT include any of these stories: [${excludeTitles.join(", ")}].
-      - PRIORITY: National News Agencies / Wires.
-      - OUTPUT: ${isOverview ? "ONLY Titles and REAL Source Names/URLs" : "Title, neutral Summary, and REAL Source Name/URL."}
-      
-      JSON FORMAT:
-      {
-        "points": [
-          {
-            "summary": "Full summary in ${language}",
-            "title": "Story headline in ${language}",
-            "sourceName": "Source",
-            "sourceUrl": "URL"
-          }
-        ]
-      }
-    `;
-
     let finalData;
 
     if (model.includes("Gemini")) {
@@ -111,22 +87,68 @@ export const handler: Handler = async (
 
       const gemini = new GoogleGenAI({ apiKey });
       const geminiModelId = model === "Gemini 2.0" ? "gemini-2.0-flash-lite" : "gemini-1.5-flash-latest";
-      const genModel = gemini.models.get(geminiModelId);
+      const genModel = gemini.getGenerativeModel({ 
+        model: geminiModelId,
+        systemInstruction: `You are a professional news aggregator. Output strictly valid JSON. Always translate EVERYTHING to ${language}.`
+      } as any);
+
+      const prompt = `
+        Fetch the latest news for:
+        Region: ${region}
+        Category: ${category}
+        Mode: ${mode}
+        
+        REQUIREMENTS:
+        - LANGUAGE: EVERYTHING MUST BE IN ${language.toUpperCase()}.
+        - NO-REPEAT: DO NOT include: [${excludeTitles.join(", ")}].
+        - OUTPUT: ${isOverview ? "ONLY Titles and Sources" : "Title, neutral Summary, and REAL Source Name/URL."}
+        
+        JSON FORMAT:
+        { "points": [ { "summary": "...", "title": "...", "sourceName": "...", "sourceUrl": "..." } ] }
+      `;
 
       const result = await genModel.generateContent({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
-        tools: [{ googleSearch: {} }] as any,
-        systemInstruction: `You are a professional news aggregator. Output strictly valid JSON. Always translate EVERYTHING to ${language}.`
+        tools: [{ googleSearch: {} }] as any
       } as any);
 
       finalData = parseJSONResponse(result.response.text(), cacheKey);
     } else {
+      // RSS BRIDGE for OpenRouter models
       const orApiKey = process.env.OPENROUTER_API_KEY;
       if (!orApiKey) throw new Error("OPENROUTER_API_KEY not found");
 
+      // 1. Fetch real news from Google News RSS
+      const query = `${category} ${region}`;
+      const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${language.toLowerCase()}`;
+      const feed = await parser.parseURL(rssUrl);
+      
+      const realNewsItems = feed.items.slice(0, 15).map(item => ({
+        title: item.title,
+        link: item.link,
+        pubDate: item.pubDate,
+        contentSnippet: item.contentSnippet
+      }));
+
+      // 2. Use AI as editor
       const orModelId = model === "Mistral" 
         ? "mistralai/mistral-7b-instruct" 
         : "meta-llama/llama-3.1-8b-instruct";
+
+      const orPrompt = `
+        You are a professional news editor. I have provided raw news items from an RSS feed.
+        Your task is to:
+        1. Select the top ${itemCount} most relevant items.
+        2. Summarize each news item into 1-2 clean sentences.
+        3. Translate EVERYTHING to ${language}.
+        4. Exclude these titles: [${excludeTitles.join(", ")}].
+        
+        RAW RSS DATA:
+        ${JSON.stringify(realNewsItems)}
+
+        JSON FORMAT:
+        { "points": [ { "summary": "Full summary in ${language}", "title": "Headline in ${language}", "sourceName": "Actual Source Name", "sourceUrl": "Actual Link" } ] }
+      `;
 
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -137,18 +159,14 @@ export const handler: Handler = async (
         body: JSON.stringify({
           model: orModelId,
           messages: [
-            { role: "system", content: `You are a professional news aggregator. Output strictly valid JSON. Always translate EVERYTHING to ${language}.` },
-            { role: "user", content: prompt }
+            { role: "system", content: `You are a reliable news editor. Output strictly valid JSON and translate to ${language}.` },
+            { role: "user", content: orPrompt }
           ],
           response_format: { type: "json_object" }
         })
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`OpenRouter API error: ${response.status} ${errorText}`);
-      }
-
+      if (!response.ok) throw new Error(`OpenRouter API error: ${response.status}`);
       const json = await response.json();
       finalData = parseJSONResponse(json.choices[0]?.message?.content || "", cacheKey);
     }
