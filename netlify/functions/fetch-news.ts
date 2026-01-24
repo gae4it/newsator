@@ -34,13 +34,10 @@ function parseJSONResponse(text: string, cacheKey: string): any {
     if (!data.points || !Array.isArray(data.points)) {
       throw new Error("Invalid structure: missing 'points' array");
     }
-    if (data.points.length === 0) {
-      throw new Error("No news points returned from API");
-    }
     return data;
   } catch (parseError) {
     console.error("[ERROR] JSON Parse failed for", cacheKey, "Text snippet:", cleanedText.substring(0, 100));
-    throw new Error("Failed to parse API response as valid JSON");
+    throw new Error("Failed to parse AI response as valid JSON");
   }
 }
 
@@ -48,7 +45,6 @@ export const handler: Handler = async (
   event: HandlerEvent,
   context: HandlerContext
 ) => {
-  // CORS headers
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -56,25 +52,17 @@ export const handler: Handler = async (
     "Content-Type": "application/json",
   };
 
-  // Handle preflight OPTIONS request
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 200, headers, body: "" };
-  }
-
-  // Only allow POST requests
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, headers, body: JSON.stringify({ error: "Method Not Allowed" }) };
-  }
+  if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers, body: "" };
+  if (event.httpMethod !== "POST") return { statusCode: 405, headers, body: JSON.stringify({ error: "Method Not Allowed" }) };
 
   try {
-    // Parse request body
-    const { region, category, mode = "Summary", model = "Gemini 1.5", excludeTitles = [], language = "English" } = JSON.parse(event.body || "{}");
+    const body = JSON.parse(event.body || "{}");
+    const { region, category, mode = "Summary", model = "Gemini 1.5", excludeTitles = [], language = "English" } = body;
 
     if (!region || !category) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: "Missing region or category" }) };
     }
 
-    // Check cache (only for initial loads)
     const isInitialLoad = excludeTitles.length === 0;
     const cacheKey = `${region}-${category}-${mode}-${model}-${language}`;
     const now = Date.now();
@@ -82,14 +70,9 @@ export const handler: Handler = async (
     if (isInitialLoad) {
       const cached = newsCache.get(cacheKey);
       if (cached && now - cached.timestamp < CACHE_DURATION_MS) {
-        console.log(`[Cache Hit] Returning cached news for ${cacheKey}`);
         return { statusCode: 200, headers, body: JSON.stringify(cached.data) };
       }
     }
-
-    // AI Setup
-    const apiKey = process.env.GEMINI_API_KEY;
-    const orApiKey = process.env.OPENROUTER_API_KEY;
 
     const isOverview = mode === "Overview";
     const itemCount = 10;
@@ -105,14 +88,14 @@ export const handler: Handler = async (
       - QUANTITY: Return exactly ${itemCount} items.
       - NO-REPEAT: DO NOT include any of these stories: [${excludeTitles.join(", ")}].
       - PRIORITY: National News Agencies / Wires.
-      - OUTPUT: ${isOverview ? "ONLY Titles and REAL Source Names/URLs. No descriptions." : "Title, neutral Summary (max 2 sentences), and REAL Source Name/URL."}
+      - OUTPUT: ${isOverview ? "ONLY Titles and REAL Source Names/URLs" : "Title, neutral Summary, and REAL Source Name/URL."}
       
       JSON FORMAT:
       {
         "points": [
           {
-            "summary": "${isOverview ? "Title in " + language : "Summary in " + language}",
-            "title": "Story headline in " + language,
+            "summary": "Full summary in ${language}",
+            "title": "Story headline in ${language}",
             "sourceName": "Source",
             "sourceUrl": "URL"
           }
@@ -122,45 +105,37 @@ export const handler: Handler = async (
 
     let finalData;
 
-    // Route based on model selection
     if (model.includes("Gemini")) {
-      if (!apiKey) throw new Error("Gemini API Key is not configured.");
-      
-      const ai = new GoogleGenAI({ apiKey });
-      const modelMapping: Record<string, string> = {
-        "Gemini 1.5": "gemini-1.5-flash-latest",
-        "Gemini 2.0": "gemini-2.0-flash-lite",
-      };
-      const targetModel = modelMapping[model] || "gemini-1.5-flash-latest";
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) throw new Error("GEMINI_API_KEY not found");
 
-      const response = await ai.models.generateContent({
-        model: targetModel,
+      const gemini = new GoogleGenAI({ apiKey });
+      const geminiModelId = model === "Gemini 2.0" ? "gemini-2.0-flash-lite" : "gemini-1.5-flash-latest";
+      const genModel = gemini.models.get(geminiModelId);
+
+      const result = await genModel.generateContent({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
-        tools: [{ googleSearch: {} }],
-        systemInstruction: `You are a professional news aggregator. Output strictly valid JSON. Always translate EVERYTHING to ${language}.`,
-      });
+        tools: [{ googleSearch: {} }] as any,
+        systemInstruction: `You are a professional news aggregator. Output strictly valid JSON. Always translate EVERYTHING to ${language}.`
+      } as any);
 
-      const rawText = response.response.text();
-      finalData = parseJSONResponse(rawText, cacheKey);
-
+      finalData = parseJSONResponse(result.response.text(), cacheKey);
     } else {
-      // OpenRouter Branch
-      if (!orApiKey) throw new Error("OpenRouter API Key is not configured.");
+      const orApiKey = process.env.OPENROUTER_API_KEY;
+      if (!orApiKey) throw new Error("OPENROUTER_API_KEY not found");
 
-      const orModelMapping: Record<string, string> = {
-        "Llama 3": "meta-llama/llama-3.1-8b-instruct:free",
-        "Mistral": "mistralai/mistral-7b-instruct:free"
-      };
-      const orModel = orModelMapping[model] || orModelMapping["Llama 3"];
+      const orModelId = model === "Mistral" 
+        ? "mistralai/mistral-7b-instruct" 
+        : "meta-llama/llama-3.1-8b-instruct";
 
-      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${orApiKey}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: orModel,
+          model: orModelId,
           messages: [
             { role: "system", content: `You are a professional news aggregator. Output strictly valid JSON. Always translate EVERYTHING to ${language}.` },
             { role: "user", content: prompt }
@@ -169,27 +144,24 @@ export const handler: Handler = async (
         })
       });
 
-      if (!res.ok) {
-        const errorBody = await res.text();
-        throw new Error(`OpenRouter Error: ${res.status} ${errorBody}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`OpenRouter API error: ${response.status} ${errorText}`);
       }
 
-      const result = await res.json();
-      const rawText = result.choices[0]?.message?.content;
-      if (!rawText) throw new Error("Empty response from OpenRouter");
-      finalData = parseJSONResponse(rawText, cacheKey);
+      const json = await response.json();
+      finalData = parseJSONResponse(json.choices[0]?.message?.content || "", cacheKey);
     }
 
-    // Final cache and return
     newsCache.set(cacheKey, { data: finalData, timestamp: now });
     return { statusCode: 200, headers, body: JSON.stringify(finalData) };
 
-  } catch (error) {
-    console.error("API Error:", error);
+  } catch (error: any) {
+    console.error("Aggregation Error:", error);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: error instanceof Error ? error.message : "Internal server error" }),
+      body: JSON.stringify({ error: error.message || "Internal server error" }),
     };
   }
 };
