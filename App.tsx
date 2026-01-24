@@ -316,7 +316,27 @@ const App: React.FC = () => {
               </div>
             )}
 
-
+            {/* Load More Button - Centered below news content */}
+            {currentNews.points.length < 50 && (
+              <div className="flex justify-center mt-10">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="px-8 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 font-semibold rounded-xl shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:scale-100 flex items-center gap-3"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                      Searching more news...
+                    </>
+                  ) : (
+                    <>
+                      <span>➕</span> Load More Headlines
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </>
         )}
       </main>
