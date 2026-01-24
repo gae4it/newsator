@@ -18,6 +18,7 @@ const categoryIcons: Record<NewsCategory, string> = {
   [NewsCategory.CLIMATE]: '🌱',
   [NewsCategory.HEALTH]: '🏥',
   [NewsCategory.CULTURE]: '🎨',
+  [NewsCategory.SPORT]: '⚽',
 };
 
 export const CategorySelector: React.FC<CategorySelectorProps> = ({ 

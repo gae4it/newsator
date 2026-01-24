@@ -42,7 +42,8 @@ export enum NewsCategory {
   WORLD = 'World',
   CLIMATE = 'Climate & Environment',
   HEALTH = 'Health',
-  CULTURE = 'Culture'
+  CULTURE = 'Culture',
+  SPORT = 'Sport'
 }
 
 export interface NewsPoint {
