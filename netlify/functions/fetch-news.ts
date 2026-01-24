@@ -87,7 +87,7 @@ export const handler: Handler = async (
       if (!apiKey) throw new Error("GEMINI_API_KEY not found");
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const geminiModelId = model === "Gemini 2.0" ? "gemini-2.0-flash-lite-preview-02-05" : "gemini-1.5-flash-latest";
+      const geminiModelId = model === "Gemini 2.0" ? "gemini-2.0-flash-lite" : "gemini-1.5-flash";
       
       const genModel = genAI.getGenerativeModel({ 
         model: geminiModelId,
@@ -124,19 +124,19 @@ export const handler: Handler = async (
 
       // 1. Fetch real news from Google News RSS
       const query = `${category} ${region}`;
-      const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${language.toLowerCase().substring(0, 2)}`;
+      const shortLang = language.toLowerCase() === 'italiano' ? 'it' : 'en';
+      const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${shortLang}&gl=${shortLang.toUpperCase()}&ceid=${shortLang.toUpperCase()}:${shortLang}`;
       
-      // Optimization: Fetch the RSS with a timeout to avoid hanging
       const feed = await Promise.race([
         parser.parseURL(rssUrl),
-        new Promise<null>((_, reject) => setTimeout(() => reject(new Error("RSS Fetch Timeout")), 5000))
+        new Promise<null>((_, reject) => setTimeout(() => reject(new Error("RSS Fetch Timeout")), 4000))
       ]);
       
       if (!feed || !feed.items) throw new Error("Unable to fetch RSS feed items");
 
-      // Optimization: Limit the items to 7 to avoid payload blowup (prevents 502)
-      const realNewsItems = feed.items.slice(0, 7).map(item => ({
-        title: item.title?.substring(0, 150),
+      // Optimization: Limit to 5 items for speed (prevents 502)
+      const realNewsItems = feed.items.slice(0, 5).map(item => ({
+        title: item.title?.substring(0, 120),
         link: item.link
       }));
 
