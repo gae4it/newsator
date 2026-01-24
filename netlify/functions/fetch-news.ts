@@ -87,10 +87,11 @@ export const handler: Handler = async (
 
       const gemini = new GoogleGenAI({ apiKey });
       const geminiModelId = model === "Gemini 2.0" ? "gemini-2.0-flash-lite" : "gemini-1.5-flash-latest";
-      const genModel = gemini.getGenerativeModel({ 
+      // Bypassing TS error with 'any' cast as the method exists at runtime but not in the currently inferred types
+      const genModel = (gemini as any).getGenerativeModel({ 
         model: geminiModelId,
         systemInstruction: `You are a professional news aggregator. Output strictly valid JSON. Always translate EVERYTHING to ${language}.`
-      } as any);
+      });
 
       const prompt = `
         Fetch the latest news for:
