@@ -9,8 +9,7 @@ interface ModeSelectorProps {
 
 export const ModeSelector: React.FC<ModeSelectorProps> = ({ selectedMode, onSelect, disabled }) => {
   return (
-    <div className="flex justify-center mb-6 mt-8">
-      <div className="bg-slate-200/50 dark:bg-slate-800/50 p-1 rounded-xl inline-flex gap-1 backdrop-blur-sm border border-slate-200 dark:border-slate-700">
+    <div className="bg-slate-200/50 dark:bg-slate-800/50 p-1 rounded-xl inline-flex gap-1 backdrop-blur-sm border border-slate-200 dark:border-slate-700">
         <button
           onClick={() => onSelect(ViewMode.SUMMARY)}
           disabled={disabled}
@@ -42,6 +41,5 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({ selectedMode, onSele
           </span>
         </button>
       </div>
-    </div>
   );
 };

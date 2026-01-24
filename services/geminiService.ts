@@ -1,4 +1,4 @@
-import { NewsTopic, Region, NewsCategory, ViewMode } from "../types";
+import { NewsTopic, Region, NewsCategory, ViewMode, AIModel } from "../types";
 
 // Client-side cache to avoid redundant requests
 const CACHE_DURATION_MS = 30 * 60 * 1000;
@@ -7,10 +7,11 @@ const newsCache: Map<string, { data: NewsTopic; timestamp: number }> = new Map()
 export const fetchNewsSummary = async (
   region: Region,
   category: NewsCategory,
-  mode: ViewMode = ViewMode.SUMMARY
+  mode: ViewMode = ViewMode.SUMMARY,
+  model: AIModel = AIModel.GEMINI_1_5
 ): Promise<NewsTopic> => {
   // Check client-side cache
-  const cacheKey = `${region}-${category}-${mode}`;
+  const cacheKey = `${region}-${category}-${mode}-${model}`;
   const cached = newsCache.get(cacheKey);
   const now = Date.now();
   
@@ -26,7 +27,7 @@ export const fetchNewsSummary = async (
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ region, category, mode }),
+      body: JSON.stringify({ region, category, mode, model }),
     });
 
     if (!response.ok) {

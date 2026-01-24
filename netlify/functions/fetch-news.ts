@@ -37,7 +37,7 @@ export const handler: Handler = async (
 
   try {
     // Parse request body
-    const { region, category, mode = "Summary" } = JSON.parse(event.body || "{}");
+    const { region, category, mode = "Summary", model = "Gemini 1.5" } = JSON.parse(event.body || "{}");
 
     if (!region || !category) {
       return {
@@ -48,7 +48,7 @@ export const handler: Handler = async (
     }
 
     // Check cache
-    const cacheKey = `${region}-${category}-${mode}`;
+    const cacheKey = `${region}-${category}-${mode}-${model}`;
     const cached = newsCache.get(cacheKey);
     const now = Date.now();
 
@@ -68,6 +68,14 @@ export const handler: Handler = async (
     }
 
     const ai = new GoogleGenAI({ apiKey });
+
+    // Map user-friendly model names to technical model names
+    const modelMapping: Record<string, string> = {
+      "Gemini 1.5": "gemini-1.5-flash",
+      "Gemini 2.0": "gemini-2.0-flash",
+    };
+    
+    const targetModel = modelMapping[model] || "gemini-1.5-flash";
 
     const isOverview = mode === "Overview";
     const itemCount = isOverview ? "30-50" : "5-10";
@@ -108,7 +116,7 @@ export const handler: Handler = async (
   `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash", // Using 2.0-flash for high volume & speed
+      model: targetModel,
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],

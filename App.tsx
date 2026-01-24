@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Region, NewsCategory, NewsTopic, ViewMode } from './types';
+import { Region, NewsCategory, NewsTopic, ViewMode, AIModel } from './types';
 import { fetchNewsSummary } from './services/geminiService';
 import { RegionSelector } from './components/RegionSelector';
 import { CategorySelector } from './components/CategorySelector';
 import { NewsCardFeed } from './components/NewsCardFeed';
 import { NewsHeadlineRow } from './components/NewsHeadlineRow';
 import { ModeSelector } from './components/ModeSelector';
+import { ModelSelector } from './components/ModelSelector';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ProgressBar } from './components/ProgressBar';
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.SUMMARY);
+  const [selectedModel, setSelectedModel] = useState<AIModel>(AIModel.GEMINI_1_5);
 
   // Initialize Theme
   useEffect(() => {
@@ -64,7 +66,7 @@ const App: React.FC = () => {
     setCurrentNews(null);
 
     try {
-      const data = await fetchNewsSummary(selectedRegion, category, viewMode);
+      const data = await fetchNewsSummary(selectedRegion, category, viewMode, selectedModel);
       setCurrentNews(data);
       setLastUpdated(new Date());
     } catch (err) {
@@ -72,7 +74,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, currentNews, viewMode]);
+  }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel]);
 
   const handleModeChange = useCallback(async (mode: ViewMode) => {
     setViewMode(mode);
@@ -83,7 +85,7 @@ const App: React.FC = () => {
     setCurrentNews(null);
 
     try {
-      const data = await fetchNewsSummary(selectedRegion, selectedCategory, mode);
+      const data = await fetchNewsSummary(selectedRegion, selectedCategory, mode, selectedModel);
       setCurrentNews(data);
       setLastUpdated(new Date());
     } catch (err) {
@@ -91,7 +93,26 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory]);
+  }, [selectedRegion, selectedCategory, selectedModel]);
+
+  const handleModelChange = useCallback(async (model: AIModel) => {
+    setSelectedModel(model);
+    if (!selectedCategory) return;
+
+    setIsLoading(true);
+    setError(null);
+    setCurrentNews(null);
+
+    try {
+      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, model);
+      setCurrentNews(data);
+      setLastUpdated(new Date());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedRegion, selectedCategory, viewMode]);
 
   const handleRefresh = useCallback(async () => {
     if (!selectedCategory || isLoading) return;
@@ -100,7 +121,7 @@ const App: React.FC = () => {
     setError(null);
     
     try {
-      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode);
+      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, selectedModel);
       setCurrentNews(data);
       setLastUpdated(new Date());
     } catch (err) {
@@ -108,7 +129,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, isLoading, viewMode]);
+  }, [selectedRegion, selectedCategory, isLoading, viewMode, selectedModel]);
 
   const formatTimestamp = (date: Date | null): string => {
     if (!date) return '';
@@ -142,7 +163,6 @@ const App: React.FC = () => {
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
         </div>
       </header>
-
       {/* Region Selector - Circular Avatars */}
       <RegionSelector 
         selectedRegion={selectedRegion} 
@@ -157,11 +177,20 @@ const App: React.FC = () => {
         disabled={isLoading}
       />
 
-      <ModeSelector 
-        selectedMode={viewMode} 
-        onSelect={handleModeChange} 
-        disabled={isLoading} 
-      />
+
+      {/* Selectors Bar - Always visible under filters */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 my-6 px-4">
+        <ModeSelector 
+          selectedMode={viewMode} 
+          onSelect={handleModeChange} 
+          disabled={isLoading} 
+        />
+        <ModelSelector 
+          selectedModel={selectedModel} 
+          onSelect={handleModelChange} 
+          disabled={isLoading} 
+        />
+      </div>
 
       <ProgressBar isLoading={isLoading} />
 
@@ -257,6 +286,8 @@ const App: React.FC = () => {
                 ))}
               </div>
             )}
+
+
           </>
         )}
       </main>
