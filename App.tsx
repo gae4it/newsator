@@ -305,11 +305,11 @@ const App: React.FC = () => {
               deferredPrompt={deferredPrompt} 
               onInstall={handleInstallClick} 
             />
+            <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
             <LanguageSelector 
               currentLanguage={selectedLanguage} 
               onLanguageChange={setSelectedLanguage} 
             />
-            <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
           </div>
         </div>
       </header>

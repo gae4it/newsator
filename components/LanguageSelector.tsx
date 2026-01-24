@@ -38,6 +38,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center w-[36px] h-[36px] overflow-hidden border border-slate-300 dark:border-slate-600"
         aria-label="Select Language"
+        title="Select Language"
       >
         <img 
           src={`https://flagcdn.com/w40/${selectedLangInfo.flag}.png`} 
