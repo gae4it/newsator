@@ -1,4 +1,4 @@
-import { NewsTopic, Region, NewsCategory, ViewMode, AIModel } from "../types";
+import { NewsTopic, Region, NewsCategory, ViewMode, AIModel, Language } from "../types";
 
 // Client-side cache to avoid redundant requests
 const CACHE_DURATION_MS = 30 * 60 * 1000;
@@ -9,11 +9,12 @@ export const fetchNewsSummary = async (
   category: NewsCategory,
   mode: ViewMode = ViewMode.SUMMARY,
   model: AIModel = AIModel.GEMINI_1_5,
-  excludeTitles: string[] = []
+  excludeTitles: string[] = [],
+  language: Language = Language.EN
 ): Promise<NewsTopic> => {
   // Check client-side cache (only for initial loads)
   const isInitialLoad = excludeTitles.length === 0;
-  const cacheKey = `${region}-${category}-${mode}-${model}`;
+  const cacheKey = `${region}-${category}-${mode}-${model}-${language}`;
   
   const now = Date.now();
   if (isInitialLoad) {
@@ -31,7 +32,7 @@ export const fetchNewsSummary = async (
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ region, category, mode, model, excludeTitles }),
+      body: JSON.stringify({ region, category, mode, model, excludeTitles, language }),
     });
 
     if (!response.ok) {

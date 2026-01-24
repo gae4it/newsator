@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Region, NewsCategory, NewsTopic, NewsPoint, ViewMode, AIModel } from './types';
+import { Region, NewsCategory, NewsTopic, NewsPoint, ViewMode, AIModel, Language } from './types';
 import { fetchNewsSummary } from './services/geminiService';
 import { RegionSelector } from './components/RegionSelector';
 import { CategorySelector } from './components/CategorySelector';
@@ -7,6 +7,7 @@ import { NewsCardFeed } from './components/NewsCardFeed';
 import { NewsHeadlineRow } from './components/NewsHeadlineRow';
 import { ModeSelector } from './components/ModeSelector';
 import { ModelSelector } from './components/ModelSelector';
+import { LanguageSelector } from './components/LanguageSelector';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 import { OverviewSkeleton } from './components/OverviewSkeleton';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -22,6 +23,7 @@ const App: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.SUMMARY);
   const [selectedModel, setSelectedModel] = useState<AIModel>(AIModel.GEMINI_1_5);
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(Language.EN);
 
   // Initialize Theme
   useEffect(() => {
@@ -95,7 +97,7 @@ const App: React.FC = () => {
     setPrefetchedPoints(null);
 
     try {
-      const data = await fetchNewsSummary(selectedRegion, category, viewMode, selectedModel);
+      const data = await fetchNewsSummary(selectedRegion, category, viewMode, selectedModel, [], selectedLanguage);
       setCurrentNews(data);
       setLastUpdated(new Date());
       
@@ -108,7 +110,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, triggerPrefetch]);
+  }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, selectedLanguage, triggerPrefetch]);
 
   const handleLoadMore = useCallback(async () => {
     if (!selectedCategory || !currentNews || isLoading || isLoadingMore) return;
@@ -135,7 +137,7 @@ const App: React.FC = () => {
     const excludeTitles = currentNews.points.map(p => p.title);
 
     try {
-      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, selectedModel, excludeTitles);
+      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, selectedModel, excludeTitles, selectedLanguage);
       
       const updatedPoints = [...currentNews.points, ...data.points];
       setCurrentNews({
@@ -150,7 +152,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, isLoading, isLoadingMore, prefetchedPoints, triggerPrefetch]);
+  }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, selectedLanguage, isLoading, isLoadingMore, prefetchedPoints, triggerPrefetch]);
 
   const handleModeChange = useCallback(async (mode: ViewMode) => {
     setViewMode(mode);
@@ -162,7 +164,7 @@ const App: React.FC = () => {
     setCurrentNews(null);
 
     try {
-      const data = await fetchNewsSummary(selectedRegion, selectedCategory, mode, selectedModel);
+      const data = await fetchNewsSummary(selectedRegion, selectedCategory, mode, selectedModel, [], selectedLanguage);
       setCurrentNews(data);
       setLastUpdated(new Date());
       
@@ -174,7 +176,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, selectedModel, triggerPrefetch]);
+  }, [selectedRegion, selectedCategory, selectedModel, selectedLanguage, triggerPrefetch]);
 
   const handleModelChange = useCallback(async (model: AIModel) => {
     setSelectedModel(model);
@@ -186,7 +188,7 @@ const App: React.FC = () => {
     setCurrentNews(null);
 
     try {
-      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, model);
+      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, model, [], selectedLanguage);
       setCurrentNews(data);
       setLastUpdated(new Date());
       
@@ -198,29 +200,9 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, viewMode, triggerPrefetch]);
+  }, [selectedRegion, selectedCategory, viewMode, selectedLanguage, triggerPrefetch]);
 
-  const handleRefresh = useCallback(async () => {
-    if (!selectedCategory || isLoading) return;
-    
-    setIsLoading(true);
-    setError(null);
-    setPrefetchedPoints(null);
-    
-    try {
-      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, selectedModel);
-      setCurrentNews(data);
-      setLastUpdated(new Date());
-      
-      if (viewMode === ViewMode.OVERVIEW) {
-        triggerPrefetch(selectedRegion, selectedCategory, viewMode, selectedModel, data.points);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedRegion, selectedCategory, isLoading, viewMode, selectedModel, triggerPrefetch]);
+
 
   const formatTimestamp = (date: Date | null): string => {
     if (!date) return '';
@@ -253,7 +235,13 @@ const App: React.FC = () => {
               Real-time news powered by Gemini
             </p>
           </div>
-          <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+          <div className="flex items-center gap-3">
+            <LanguageSelector 
+              currentLanguage={selectedLanguage} 
+              onLanguageChange={setSelectedLanguage} 
+            />
+            <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+          </div>
         </div>
       </header>
       {/* Region Selector - Circular Avatars */}

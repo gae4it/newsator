@@ -37,7 +37,7 @@ export const handler: Handler = async (
 
   try {
     // Parse request body
-    const { region, category, mode = "Summary", model = "Gemini 1.5", excludeTitles = [] } = JSON.parse(event.body || "{}");
+    const { region, category, mode = "Summary", model = "Gemini 1.5", excludeTitles = [], language = "English" } = JSON.parse(event.body || "{}");
 
     if (!region || !category) {
       return {
@@ -49,7 +49,7 @@ export const handler: Handler = async (
 
     // Check cache (only for initial loads)
     const isInitialLoad = excludeTitles.length === 0;
-    const cacheKey = `${region}-${category}-${mode}-${model}`;
+    const cacheKey = `${region}-${category}-${mode}-${model}-${language}`;
     const now = Date.now();
 
     if (isInitialLoad) {
@@ -90,18 +90,18 @@ export const handler: Handler = async (
     Batch: ${isInitialLoad ? "Initial" : "Additional"}
     
     REQUIREMENTS:
+    - LANGUAGE: EVERYTHING (titles and summaries) MUST BE IN ${language.toUpperCase()}.
     - QUANTITY: Return exactly ${itemCount} items.
     - NO-REPEAT: DO NOT include any of these stories: [${excludeTitles.join(", ")}].
     - PRIORITY: National News Agencies / Wires.
-    - TRANSLATE: Everything must be in English.
     - OUTPUT: ${isOverview ? "ONLY Titles and REAL Source Names/URLs. No descriptions." : "Title, neutral Summary (max 2 sentences), and REAL Source Name/URL."}
     
     JSON FORMAT:
     {
       "points": [
         {
-          "summary": "${isOverview ? "Title here" : "Summary here"}",
-          "title": "Story headline",
+          "summary": "${isOverview ? "Title in " + language : "Summary in " + language}",
+          "title": "Story headline in " + language,
           "sourceName": "Source",
           "sourceUrl": "URL"
         }
@@ -115,7 +115,7 @@ export const handler: Handler = async (
       config: {
         tools: [{ googleSearch: {} }],
         systemInstruction:
-          "You are a professional news aggregator. Output strictly valid JSON. Prioritize wire services (Reuters, AP, ANSA, etc.). Always translate to English.",
+          `You are a professional news aggregator. Output strictly valid JSON. Always translate EVERYTHING to ${language}.`,
       },
     });
 

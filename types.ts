@@ -23,6 +23,13 @@ export enum AIModel {
   GEMINI_2_0 = 'Gemini 2.0'
 }
 
+export enum Language {
+  EN = 'English',
+  DE = 'Deutsch',
+  ES = 'Español',
+  IT = 'Italiano'
+}
+
 export enum NewsCategory {
   BREAKING = 'Breaking News',
   POLITICS = 'Politics',
