@@ -202,6 +202,35 @@ const App: React.FC = () => {
     }
   }, [selectedRegion, selectedCategory, viewMode, selectedLanguage, triggerPrefetch]);
 
+  const handleRefresh = useCallback(async () => {
+    if (!selectedCategory || isLoading) return;
+    
+    setIsLoading(true);
+    setError(null);
+    setPrefetchedPoints(null);
+    
+    try {
+      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, selectedModel, [], selectedLanguage);
+      setCurrentNews(data);
+      setLastUpdated(new Date());
+      
+      if (viewMode === ViewMode.OVERVIEW) {
+        triggerPrefetch(selectedRegion, selectedCategory, viewMode, selectedModel, data.points);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedRegion, selectedCategory, isLoading, viewMode, selectedModel, selectedLanguage, triggerPrefetch]);
+
+  // Handle language change auto-refresh
+  useEffect(() => {
+    if (selectedCategory) {
+      handleRefresh();
+    }
+  }, [selectedLanguage]); // Only trigger when language changes
+
 
 
   const formatTimestamp = (date: Date | null): string => {
