@@ -8,6 +8,7 @@ import { NewsHeadlineRow } from './components/NewsHeadlineRow';
 import { ModeSelector } from './components/ModeSelector';
 import { ModelSelector } from './components/ModelSelector';
 import { LanguageSelector } from './components/LanguageSelector';
+import { PWAInstallButton } from './components/PWAInstallButton';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 import { OverviewSkeleton } from './components/OverviewSkeleton';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -24,6 +25,38 @@ const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.SUMMARY);
   const [selectedModel, setSelectedModel] = useState<AIModel>(AIModel.GEMINI_1_5);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(Language.EN);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  // PWA Install Prompt Listener
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      // Prevent automatic prompt
+      e.preventDefault();
+      // Store the event so it can be triggered later
+      setDeferredPrompt(e);
+      console.log('beforeinstallprompt event captured');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = useCallback(async () => {
+    if (!deferredPrompt) return;
+    
+    // Show the install prompt
+    deferredPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to the install prompt: ${outcome}`);
+    
+    // We've used the prompt, and can't use it again, so clear it
+    setDeferredPrompt(null);
+  }, [deferredPrompt]);
 
   // Initialize Theme
   useEffect(() => {
@@ -268,6 +301,10 @@ const App: React.FC = () => {
             </a>
           </div>
           <div className="flex items-center gap-3">
+            <PWAInstallButton 
+              deferredPrompt={deferredPrompt} 
+              onInstall={handleInstallClick} 
+            />
             <LanguageSelector 
               currentLanguage={selectedLanguage} 
               onLanguageChange={setSelectedLanguage} 
