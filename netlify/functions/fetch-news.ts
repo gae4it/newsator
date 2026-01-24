@@ -33,11 +33,16 @@ function parseJSONResponse(text: string, cacheKey: string): any {
 
   try {
     const data = JSON.parse(cleanedText);
-    // Validate data structure
-    if (!data.points || !Array.isArray(data.points)) {
+    
+    // Normalize response structure (handle models that hallucinate keys like 'articles' or 'news')
+    const actualPoints = data.points || data.articles || data.news || data.items;
+    
+    if (!actualPoints || !Array.isArray(actualPoints)) {
       throw new Error("Invalid structure: missing 'points' array");
     }
-    return data;
+
+    // Ensure it always returns the expected { points: [...] } structure
+    return { points: actualPoints };
   } catch (parseError) {
     console.error("[ERROR] JSON Parse failed for", cacheKey, "Text snippet:", cleanedText.substring(0, 100));
     throw new Error("Failed to parse AI response as valid JSON. Raw: " + (cleanedText.substring(0, 50) + "..."));
@@ -139,10 +144,16 @@ export const handler: Handler = async (
       }));
 
       const orPrompt = `
-        Format these RSS items as valid JSON in ${language}.
-        Avoid: [${limitedExcludeTitles.join(", ")}]
+        MANDATORY TASK: Summarize and format these 5 fresh news items into valid JSON.
+        JSON KEY NAME: Use "points" for the array of news.
+        LANGUAGE: All content must be in ${language}.
+        
         DATA: ${JSON.stringify(realNewsItems)}
-        JSON: { "points": [ { "title": "...", "summary": "...", "sourceName": "...", "sourceUrl": "..." } ] }
+
+        EXPECTED JSON STRUCTURE (STRICT):
+        { "points": [ { "title": "Headline in ${language}", "summary": "1 short sentence in ${language}", "sourceName": "Source", "sourceUrl": "Link" } ] }
+        
+        FINAL RULE: NO preamble, NO extra text, ONLY the JSON object.
       `;
 
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {

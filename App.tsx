@@ -85,85 +85,39 @@ const App: React.FC = () => {
   };
 
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
-  const [prefetchedPoints, setPrefetchedPoints] = useState<NewsPoint[] | null>(null);
-  const [isPrefetching, setIsPrefetching] = useState<boolean>(false);
-
-  const triggerPrefetch = useCallback(async (
-    region: Region, 
-    category: NewsCategory, 
-    mode: ViewMode, 
-    model: AIModel, 
-    existingPoints: NewsPoint[]
-  ) => {
-    if (existingPoints.length >= 50 || isPrefetching) return;
-    
-    setIsPrefetching(true);
-    try {
-      const excludeTitles = existingPoints.map(p => p.title);
-      const data = await fetchNewsSummary(region, category, mode, model, excludeTitles, selectedLanguage);
-      setPrefetchedPoints(data.points);
-    } catch (err) {
-      console.error("Prefetch failed:", err);
-      setPrefetchedPoints(null); // Clear on error to force regular fetch
-    } finally {
-      setIsPrefetching(false);
-    }
-  }, [isPrefetching, selectedLanguage]);
 
   const handleRegionSelect = useCallback((region: Region) => {
     setSelectedRegion(region);
-    // Clear category and news when switching regions
     setSelectedCategory(null);
     setCurrentNews(null);
-    setPrefetchedPoints(null);
     setError(null);
   }, []);
 
   const handleCategorySelect = useCallback(async (category: NewsCategory) => {
-    // If same category is clicked, do nothing
     if (category === selectedCategory && currentNews) return;
 
     setSelectedCategory(category);
     setIsLoading(true);
     setError(null);
     setCurrentNews(null);
-    setPrefetchedPoints(null);
 
     try {
       const data = await fetchNewsSummary(selectedRegion, category, viewMode, selectedModel, [], selectedLanguage);
       setCurrentNews(data);
       setLastUpdated(new Date());
-      
-      // Smart Prefetch: Start loading next batch immediately
-      if (viewMode === ViewMode.OVERVIEW) {
-        triggerPrefetch(selectedRegion, category, viewMode, selectedModel, data.points);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, selectedLanguage, triggerPrefetch]);
+  }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, selectedLanguage]);
 
   const handleLoadMore = useCallback(async () => {
     if (!selectedCategory || !currentNews || isLoading || isLoadingMore) return;
-    if (currentNews.points.length >= 50) return;
+    
+    const limit = viewMode === ViewMode.OVERVIEW ? 50 : 10;
+    if (currentNews.points.length >= limit) return;
 
-    // Use Prefetched data if available
-    if (prefetchedPoints && prefetchedPoints.length > 0) {
-      const updatedPoints = [...currentNews.points, ...prefetchedPoints];
-      setCurrentNews({
-        ...currentNews,
-        points: updatedPoints
-      });
-      setPrefetchedPoints(null);
-      
-      // Trigger next prefetch
-      triggerPrefetch(selectedRegion, selectedCategory, viewMode, selectedModel, updatedPoints);
-      return;
-    }
-
-    // Fallback: Manual fetch if prefetch wasn't ready
     setIsLoadingMore(true);
     setError(null);
 
@@ -177,19 +131,15 @@ const App: React.FC = () => {
         ...currentNews,
         points: updatedPoints
       });
-      
-      // Trigger next prefetch
-      triggerPrefetch(selectedRegion, selectedCategory, viewMode, selectedModel, updatedPoints);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load more news.");
     } finally {
       setIsLoadingMore(false);
     }
-  }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, selectedLanguage, isLoading, isLoadingMore, prefetchedPoints, triggerPrefetch]);
+  }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, selectedLanguage, isLoading, isLoadingMore]);
 
   const handleModeChange = useCallback(async (mode: ViewMode) => {
     setViewMode(mode);
-    setPrefetchedPoints(null);
     if (!selectedCategory) return;
 
     setIsLoading(true);
@@ -200,20 +150,15 @@ const App: React.FC = () => {
       const data = await fetchNewsSummary(selectedRegion, selectedCategory, mode, selectedModel, [], selectedLanguage);
       setCurrentNews(data);
       setLastUpdated(new Date());
-      
-      if (mode === ViewMode.OVERVIEW) {
-        triggerPrefetch(selectedRegion, selectedCategory, mode, selectedModel, data.points);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, selectedModel, selectedLanguage, triggerPrefetch]);
+  }, [selectedRegion, selectedCategory, selectedModel, selectedLanguage]);
 
   const handleModelChange = useCallback(async (model: AIModel) => {
     setSelectedModel(model);
-    setPrefetchedPoints(null);
     if (!selectedCategory) return;
 
     setIsLoading(true);
@@ -224,38 +169,29 @@ const App: React.FC = () => {
       const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, model, [], selectedLanguage);
       setCurrentNews(data);
       setLastUpdated(new Date());
-      
-      if (viewMode === ViewMode.OVERVIEW) {
-        triggerPrefetch(selectedRegion, selectedCategory, viewMode, model, data.points);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, viewMode, selectedLanguage, triggerPrefetch]);
+  }, [selectedRegion, selectedCategory, viewMode, selectedLanguage]);
 
   const handleRefresh = useCallback(async () => {
     if (!selectedCategory || isLoading) return;
     
     setIsLoading(true);
     setError(null);
-    setPrefetchedPoints(null);
     
     try {
       const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, selectedModel, [], selectedLanguage);
       setCurrentNews(data);
       setLastUpdated(new Date());
-      
-      if (viewMode === ViewMode.OVERVIEW) {
-        triggerPrefetch(selectedRegion, selectedCategory, viewMode, selectedModel, data.points);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, isLoading, viewMode, selectedModel, selectedLanguage, triggerPrefetch]);
+  }, [selectedRegion, selectedCategory, isLoading, viewMode, selectedModel, selectedLanguage]);
 
   // Handle language change auto-refresh
   useEffect(() => {
@@ -446,7 +382,7 @@ const App: React.FC = () => {
             )}
 
             {/* Load More Button - Centered below news content */}
-            {currentNews.points.length < 50 && (
+            {currentNews.points.length < (viewMode === ViewMode.OVERVIEW ? 50 : 10) && (
               <div className="flex justify-center mt-10">
                 <button
                   onClick={handleLoadMore}
@@ -460,7 +396,7 @@ const App: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <span>➕</span> Load More Headlines
+                      <span>➕</span> Load More {viewMode === ViewMode.OVERVIEW ? 'Headlines' : 'Cards'}
                     </>
                   )}
                 </button>
