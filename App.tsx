@@ -160,7 +160,7 @@ const App: React.FC = () => {
       <ModeSelector 
         selectedMode={viewMode} 
         onSelect={handleModeChange} 
-        disabled={isLoading || !selectedCategory} 
+        disabled={isLoading} 
       />
 
       <ProgressBar isLoading={isLoading} />
