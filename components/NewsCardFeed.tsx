@@ -33,24 +33,55 @@ const categoryColors: Record<NewsCategory, string> = {
   [NewsCategory.CULTURE]: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
 };
 
+// Category to image mapping
+const categoryImages: Record<NewsCategory, string> = {
+  [NewsCategory.BREAKING]: 'breaking-news.png',
+  [NewsCategory.POLITICS]: 'politics.png',
+  [NewsCategory.ECONOMY]: 'economy.png',
+  [NewsCategory.BUSINESS]: 'business.png',
+  [NewsCategory.TECHNOLOGY]: 'technology.png',
+  [NewsCategory.CRIME]: 'crime.png',
+  [NewsCategory.WORLD]: 'world.png',
+  [NewsCategory.CLIMATE]: 'climate.png',
+  [NewsCategory.HEALTH]: 'health.png',
+  [NewsCategory.CULTURE]: 'culture.png',
+};
+
 export const NewsCardFeed: React.FC<NewsCardFeedProps> = ({ newsPoint, category }) => {
-  const header = categoryHeaders[category];
+  const headerGradient = categoryHeaders[category];
+  const imageName = categoryImages[category];
   
   return (
     <article className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-all duration-300">
-      {/* Category Header Gradient */}
-      <div className="h-32 relative overflow-hidden">
+      {/* Category Header Image with Gradient Fallback */}
+      <div className="h-32 relative overflow-hidden bg-slate-200 dark:bg-slate-700">
+        {/* Gradient Fallback */}
         <div 
-          className="w-full h-full"
-          style={{ background: categoryHeaders[category] }}
+          className="absolute inset-0 w-full h-full opacity-50"
+          style={{ background: headerGradient }}
         />
+        
+        {/* Category Image */}
+        <img 
+          src={`/images/categories/${imageName}`}
+          alt={category}
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.opacity = '0';
+          }}
+        />
+
+        {/* Overlay for better text readability (if needed) */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+
         {/* Category Badge */}
         <div className="absolute top-3 left-3">
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${categoryColors[category]}`}>
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${categoryColors[category]}`}>
             {category}
           </span>
         </div>
       </div>
+
 
       {/* Content */}
       <div className="p-4">

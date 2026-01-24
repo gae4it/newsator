@@ -76,7 +76,7 @@ export const handler: Handler = async (
     Category: ${category}
     
     REQUIREMENTS:
-    - Find 5-7 recent news stories from the last 24-72 hours
+    - Find 5-10 recent news stories from the last 48-100 hours
     - Focus specifically on "${category}" news for "${region}"
     - Provide neutral, factual summaries (1-2 sentences each)
     - Include REAL source names and URLs from Google Search results
@@ -94,7 +94,7 @@ export const handler: Handler = async (
       ]
     }
     
-    Return 5-7 items in the "points" array.
+    Return 5-10 items in the "points" array.
   `;
 
     const response = await ai.models.generateContent({
