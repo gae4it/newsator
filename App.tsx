@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Initialize Theme
   useEffect(() => {
@@ -61,12 +62,45 @@ const App: React.FC = () => {
     try {
       const data = await fetchNewsSummary(selectedRegion, category);
       setCurrentNews(data);
+      setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
   }, [selectedRegion, selectedCategory, currentNews]);
+
+  const handleRefresh = useCallback(async () => {
+    if (!selectedCategory || isLoading) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const data = await fetchNewsSummary(selectedRegion, selectedCategory);
+      setCurrentNews(data);
+      setLastUpdated(new Date());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedRegion, selectedCategory, isLoading]);
+
+  const formatTimestamp = (date: Date | null): string => {
+    if (!date) return '';
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins === 1) return '1 minute ago';
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours === 1) return '1 hour ago';
+    return `${diffHours} hours ago`;
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
@@ -144,15 +178,43 @@ const App: React.FC = () => {
 
         {/* News Feed - Display all news points as individual cards */}
         {currentNews && !isLoading && selectedCategory && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {currentNews.points.map((point, index) => (
-              <NewsCardFeed 
-                key={index} 
-                newsPoint={point} 
-                category={selectedCategory}
-              />
-            ))}
-          </div>
+          <>
+            {/* Header with timestamp and refresh button */}
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <span>📰</span>
+                <span>
+                  {lastUpdated && (
+                    <>
+                      Updated {formatTimestamp(lastUpdated)}
+                      <span className="ml-2 text-xs opacity-60">(cached for 30 min)</span>
+                    </>
+                  )}
+                </span>
+              </div>
+              <button
+                onClick={handleRefresh}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Refresh news"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {currentNews.points.map((point, index) => (
+                <NewsCardFeed 
+                  key={index} 
+                  newsPoint={point} 
+                  category={selectedCategory}
+                />
+              ))}
+            </div>
+          </>
         )}
       </main>
 

@@ -2,51 +2,109 @@
 
 Real-time news aggregator powered by Google Gemini with Google Search Grounding.
 
-## Tech Stack
+## 🚀 Features
+
+- 🌍 **Multi-region news** (World, Europe, Germany, Italy, Spain, Switzerland)
+- 🔍 **Real-time news** via Google Search Grounding
+- 🤖 **AI-powered summaries** using Gemini 2.5 Flash
+- 🌓 **Dark mode** support
+- ⚡ **Smart caching** (30 minutes)
+- 📱 **Responsive design**
+- 🔒 **Secure API** with Netlify Functions
+- 🚫 **Privacy-focused** (No cookies, no tracking, noindex/nofollow)
+
+## 🛠️ Tech Stack
 
 - **React 19** + **TypeScript**
 - **Vite** (Build tool)
-- **Tailwind CSS v4** (Beta)
-- **Google Gemini API** (with Search Grounding)
+- **Tailwind CSS v3**
+- **Google Gemini 2.5 Flash** (with Search Grounding)
+- **Netlify Functions** (Serverless API)
 - **ESLint** + **Prettier**
 
-## Setup
+## 📦 Setup
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+### 1. Install dependencies
+```bash
+npm install
+```
 
-2. **Configure API Key:**
-   Create a `.env.local` file:
-   ```env
-   GEMINI_API_KEY=your_api_key_here
-   ```
-   Get your key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+### 2. Configure API Key
+Create a `.env.local` file in the root directory:
+```env
+GEMINI_API_KEY=your_api_key_here
+```
+Get your key from [Google AI Studio](https://aistudio.google.com/app/apikey).
 
-3. **Run development server:**
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000)
+### 3. Run development server
 
-## Available Scripts
+**Option A: Standard Vite dev server** (without Netlify Functions)
+```bash
+npm run dev
+```
+⚠️ This won't work for API calls. Use Option B for full functionality.
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production (⚠️ May fail with Tailwind 4 beta)
+**Option B: Netlify Dev server** (recommended, with Functions)
+```bash
+npm run dev:netlify
+```
+This runs the app with Netlify Functions enabled.
+
+Open the URL shown in terminal (usually `http://localhost:8888`)
+
+## 📜 Available Scripts
+
+- `npm run dev` - Start Vite dev server (port 3000)
+- `npm run dev:netlify` - Start Netlify dev server with Functions
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
 - `npm run format` - Format code with Prettier
 
-## Features
+## 🚀 Deployment
 
-- 🌍 Multi-region news (World, Europe, Germany, Italy, Spain, Switzerland)
-- 🔍 Real-time news via Google Search Grounding
-- 🌓 Dark mode support
-- ⚡ Fast caching (15 minutes)
-- 📱 Responsive design
+### Deploy to Netlify
 
-## Notes
+1. **Push to GitHub:**
+   ```bash
+   git add .
+   git commit -m "Ready for production"
+   git push
+   ```
 
-- **Tailwind CSS v4** is in beta - production builds may be unstable
-- The app uses **Google Gemini 2.0 Flash** model
+2. **Connect to Netlify:**
+   - Go to [Netlify](https://app.netlify.com/)
+   - Click "Add new site" → "Import an existing project"
+   - Connect your GitHub repository
+   - Netlify will auto-detect settings from `netlify.toml`
+
+3. **Set Environment Variable:**
+   - Go to Site Settings → Environment Variables
+   - Add: `GEMINI_API_KEY` = `your_api_key_here`
+
+4. **Deploy!**
+   - Netlify will automatically build and deploy
+   - Your app will be live at `https://your-site.netlify.app`
+
+## 🔒 Security
+
+- ✅ API key is **never exposed** to the client (secured with Netlify Functions)
+- ✅ **noindex/nofollow** meta tags prevent search engine indexing
+- ✅ `robots.txt` blocks all AI crawlers and search engines
+- ✅ HTTP security headers via `_headers` file
+- ✅ No cookies, no tracking, privacy-focused
+
+## 📝 Notes
+
 - News are fetched in real-time and summarized by AI
+- Cache duration: **30 minutes** (configurable in code)
+- Model: **Gemini 2.5 Flash** (updated from 2.0)
+- Educational project - not for commercial use
+
+## 🤝 Contributing
+
+This is an educational project. Feel free to fork and modify!
+
+## 📄 License
+
+Educational use only. See legal pages for details.

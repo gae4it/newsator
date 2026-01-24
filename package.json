@@ -1,10 +1,11 @@
 {
   "name": "newsator",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:netlify": "netlify dev",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -12,12 +13,12 @@
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
-    "openai": "^6.9.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@netlify/functions": "^5.1.2",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.20",
@@ -26,6 +27,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "netlify-cli": "^23.13.5",
     "postcss": "^8.4.49",
     "prettier": "^3.7.1",
     "tailwindcss": "^3.4.17",
