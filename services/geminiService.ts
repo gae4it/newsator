@@ -8,26 +8,30 @@ export const fetchNewsSummary = async (
   region: Region,
   category: NewsCategory,
   mode: ViewMode = ViewMode.SUMMARY,
-  model: AIModel = AIModel.GEMINI_1_5
+  model: AIModel = AIModel.GEMINI_1_5,
+  excludeTitles: string[] = []
 ): Promise<NewsTopic> => {
-  // Check client-side cache
+  // Check client-side cache (only for initial loads)
+  const isInitialLoad = excludeTitles.length === 0;
   const cacheKey = `${region}-${category}-${mode}-${model}`;
-  const cached = newsCache.get(cacheKey);
-  const now = Date.now();
   
-  if (cached && now - cached.timestamp < CACHE_DURATION_MS) {
-    console.log(`[Cache Hit] Returning cached news for ${cacheKey}`);
-    return cached.data;
+  const now = Date.now();
+  if (isInitialLoad) {
+    const cached = newsCache.get(cacheKey);
+    if (cached && now - cached.timestamp < CACHE_DURATION_MS) {
+      console.log(`[Cache Hit] Returning cached news for ${cacheKey}`);
+      return cached.data;
+    }
   }
 
   try {
-    // Call Netlify Function (API key is secure on server-side)
+    // Call Netlify Function
     const response = await fetch("/.netlify/functions/fetch-news", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ region, category, mode, model }),
+      body: JSON.stringify({ region, category, mode, model, excludeTitles }),
     });
 
     if (!response.ok) {

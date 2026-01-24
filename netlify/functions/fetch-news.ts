@@ -37,7 +37,7 @@ export const handler: Handler = async (
 
   try {
     // Parse request body
-    const { region, category, mode = "Summary", model = "Gemini 1.5" } = JSON.parse(event.body || "{}");
+    const { region, category, mode = "Summary", model = "Gemini 1.5", excludeTitles = [] } = JSON.parse(event.body || "{}");
 
     if (!region || !category) {
       return {
@@ -47,21 +47,24 @@ export const handler: Handler = async (
       };
     }
 
-    // Check cache
+    // Check cache (only for initial loads)
+    const isInitialLoad = excludeTitles.length === 0;
     const cacheKey = `${region}-${category}-${mode}-${model}`;
-    const cached = newsCache.get(cacheKey);
     const now = Date.now();
 
-    if (cached && now - cached.timestamp < CACHE_DURATION_MS) {
-      console.log(`[Cache Hit] Returning cached news for ${cacheKey}`);
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify(cached.data),
-      };
+    if (isInitialLoad) {
+      const cached = newsCache.get(cacheKey);
+      if (cached && now - cached.timestamp < CACHE_DURATION_MS) {
+        console.log(`[Cache Hit] Returning cached news for ${cacheKey}`);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(cached.data),
+        };
+      }
     }
 
-    // Get API key from environment variable
+    // Get API key
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new Error("API Key is not configured on server");
@@ -69,50 +72,41 @@ export const handler: Handler = async (
 
     const ai = new GoogleGenAI({ apiKey });
 
-    // Map user-friendly model names to technical model names available in this environment
     const modelMapping: Record<string, string> = {
-      "Gemini 1.5": "gemini-flash-latest",     // Stable alias, usually points to 1.5 or newest flash
-      "Gemini 2.0": "gemini-2.0-flash-lite",   // Lite version often has more stable free quota
+      "Gemini 1.5": "gemini-flash-latest",
+      "Gemini 2.0": "gemini-2.0-flash-lite",
     };
     
     const targetModel = modelMapping[model] || "gemini-2.5-flash";
 
     const isOverview = mode === "Overview";
-    const itemCount = isOverview ? "30-50" : "5-10";
+    const itemCount = 10; // Forced batches of 10 for speed and stability
     
     const prompt = `
-    You are a professional news aggregator with access to Google Search. Fetch the latest news for:
-    
+    Fetch the latest news for:
     Region: ${region}
     Category: ${category}
     Mode: ${mode}
+    Batch: ${isInitialLoad ? "Initial" : "Additional"}
     
     REQUIREMENTS:
-    - MODE: ${isOverview ? "OVERVIEW (Headline list)" : "SUMMARY (Detailed stories)"}
-    - COUNT: Find and return ${itemCount} distinct news items from the last 24-100 hours.
-    - PRIORITIZATION: 1. International/National News Agencies (Wire services like Reuters, AP, AFP, ANSA, DPA, EFE, Bloomberg). 2. Major Newspapers and Broadcasters.
-    - TRANSLATION: Ensure all content is in English. Translate local headlines from "${region}" to English.
-    - QUALITY: Provide the most relevant and high-profile stories first.
+    - QUANTITY: Return exactly ${itemCount} items.
+    - NO-REPEAT: DO NOT include any of these stories: [${excludeTitles.join(", ")}].
+    - PRIORITY: National News Agencies / Wires.
+    - TRANSLATE: Everything must be in English.
+    - OUTPUT: ${isOverview ? "ONLY Titles and REAL Source Names/URLs. No descriptions." : "Title, neutral Summary (max 2 sentences), and REAL Source Name/URL."}
     
-    ${isOverview 
-      ? "- OUTPUT: For each item, provide ONLY a concise TITLE and the REAL Source Name/URL." 
-      : "- OUTPUT: For each item, provide a TITLE, a 1-2 sentence neutral SUMMARY, and the REAL Source Name/URL."}
-    
-    OUTPUT FORMAT - Return ONLY valid JSON:
+    JSON FORMAT:
     {
-      "category": "${category}",
-      "mode": "${mode}",
       "points": [
         {
-          "summary": "${isOverview ? "Just the headline title here" : "Brief neutral summary here"}",
-          "title": "Headline title",
-          "sourceName": "Real source name (e.g., Reuters, AP)",
-          "sourceUrl": "Real URL"
+          "summary": "${isOverview ? "Title here" : "Summary here"}",
+          "title": "Story headline",
+          "sourceName": "Source",
+          "sourceUrl": "URL"
         }
       ]
     }
-    
-    Return exactly ${itemCount} items in the "points" array. Ensure the "summary" field is used as requested.
   `;
 
     const response = await ai.models.generateContent({

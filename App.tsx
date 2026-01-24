@@ -48,6 +48,8 @@ const App: React.FC = () => {
     }
   };
 
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+
   const handleRegionSelect = useCallback((region: Region) => {
     setSelectedRegion(region);
     // Clear category and news when switching regions
@@ -75,6 +77,31 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel]);
+
+  const handleLoadMore = useCallback(async () => {
+    if (!selectedCategory || !currentNews || isLoading || isLoadingMore) return;
+    if (currentNews.points.length >= 50) return;
+
+    setIsLoadingMore(true);
+    setError(null);
+
+    // Collect existing titles to avoid duplicates
+    const excludeTitles = currentNews.points.map(p => p.title);
+
+    try {
+      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, selectedModel, excludeTitles);
+      
+      setCurrentNews({
+        ...currentNews,
+        points: [...currentNews.points, ...data.points]
+      });
+    } catch (err) {
+      // Don't clear current news if load more fails, just show error
+      setError(err instanceof Error ? err.message : "Failed to load more news.");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, isLoading, isLoadingMore]);
 
   const handleModeChange = useCallback(async (mode: ViewMode) => {
     setViewMode(mode);
@@ -153,9 +180,11 @@ const App: React.FC = () => {
       <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 sticky top-0 z-20 transition-colors duration-300">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div>
-            <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              <span className="text-blue-600 dark:text-blue-400">News</span>ator AI
-            </h1>
+            <a href="https://newsator.netlify.app/" className="hover:opacity-80 transition-opacity">
+              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                <span className="text-blue-600 dark:text-blue-400">News</span>ator AI
+              </h1>
+            </a>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Real-time news powered by Gemini
             </p>

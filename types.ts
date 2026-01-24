@@ -37,6 +37,7 @@ export enum NewsCategory {
 }
 
 export interface NewsPoint {
+  title: string;
   summary: string;
   sourceName: string;
   sourceUrl: string;
