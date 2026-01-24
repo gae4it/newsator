@@ -1,5 +1,5 @@
 import type { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import Parser from "rss-parser";
 
 const parser = new Parser();
@@ -40,7 +40,7 @@ function parseJSONResponse(text: string, cacheKey: string): any {
     return data;
   } catch (parseError) {
     console.error("[ERROR] JSON Parse failed for", cacheKey, "Text snippet:", cleanedText.substring(0, 100));
-    throw new Error("Failed to parse AI response as valid JSON");
+    throw new Error("Failed to parse AI response as valid JSON. Raw: " + (cleanedText.substring(0, 50) + "..."));
   }
 }
 
@@ -81,20 +81,21 @@ export const handler: Handler = async (
     const itemCount = 10;
     let finalData;
 
+    // AI LOGIC
     if (model.includes("Gemini")) {
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) throw new Error("GEMINI_API_KEY not found");
 
-      const gemini = new GoogleGenAI({ apiKey });
-      const geminiModelId = model === "Gemini 2.0" ? "gemini-2.0-flash-lite" : "gemini-1.5-flash-latest";
-      // Bypassing TS error with 'any' cast as the method exists at runtime but not in the currently inferred types
-      const genModel = (gemini as any).getGenerativeModel({ 
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const geminiModelId = model === "Gemini 2.0" ? "gemini-2.0-flash-lite-preview-02-05" : "gemini-1.5-flash-latest";
+      
+      const genModel = genAI.getGenerativeModel({ 
         model: geminiModelId,
-        systemInstruction: `You are a professional news aggregator. Output strictly valid JSON. Always translate EVERYTHING to ${language}.`
+        systemInstruction: `You are a professional news aggregator. Output strictly valid JSON. Always translate EVERYTHING (titles and summaries) to ${language}.`
       });
 
-      const prompt = `
-        Fetch the latest news for:
+      const promptText = `
+        Fetch the 10 latest news for:
         Region: ${region}
         Category: ${category}
         Mode: ${mode}
@@ -102,53 +103,59 @@ export const handler: Handler = async (
         REQUIREMENTS:
         - LANGUAGE: EVERYTHING MUST BE IN ${language.toUpperCase()}.
         - NO-REPEAT: DO NOT include: [${excludeTitles.join(", ")}].
-        - OUTPUT: ${isOverview ? "ONLY Titles and Sources" : "Title, neutral Summary, and REAL Source Name/URL."}
+        - OUTPUT: ${isOverview ? "ONLY Titles and Sources" : "Title, neutral Summary (max 2 sentences), and REAL Source Name/URL."}
         
         JSON FORMAT:
         { "points": [ { "summary": "...", "title": "...", "sourceName": "...", "sourceUrl": "..." } ] }
       `;
 
       const result = await genModel.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        contents: [{ role: "user", parts: [{ text: promptText }] }],
         tools: [{ googleSearch: {} }] as any
-      } as any);
+      });
 
-      finalData = parseJSONResponse(result.response.text(), cacheKey);
+      const responseText = result.response.text();
+      finalData = parseJSONResponse(responseText, cacheKey);
+
     } else {
-      // RSS BRIDGE for OpenRouter models
+      // OpenRouter Logic with RSS Bridge
       const orApiKey = process.env.OPENROUTER_API_KEY;
       if (!orApiKey) throw new Error("OPENROUTER_API_KEY not found");
 
       // 1. Fetch real news from Google News RSS
       const query = `${category} ${region}`;
-      const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${language.toLowerCase()}`;
-      const feed = await parser.parseURL(rssUrl);
+      const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${language.toLowerCase().substring(0, 2)}`;
       
-      const realNewsItems = feed.items.slice(0, 15).map(item => ({
-        title: item.title,
-        link: item.link,
-        pubDate: item.pubDate,
-        contentSnippet: item.contentSnippet
+      // Optimization: Fetch the RSS with a timeout to avoid hanging
+      const feed = await Promise.race([
+        parser.parseURL(rssUrl),
+        new Promise<null>((_, reject) => setTimeout(() => reject(new Error("RSS Fetch Timeout")), 5000))
+      ]);
+      
+      if (!feed || !feed.items) throw new Error("Unable to fetch RSS feed items");
+
+      // Optimization: Limit the items to 7 to avoid payload blowup (prevents 502)
+      const realNewsItems = feed.items.slice(0, 7).map(item => ({
+        title: item.title?.substring(0, 150),
+        link: item.link
       }));
 
-      // 2. Use AI as editor
+      // 2. Use Llama/Mistral as processor
       const orModelId = model === "Mistral" 
         ? "mistralai/mistral-7b-instruct" 
         : "meta-llama/llama-3.1-8b-instruct";
 
       const orPrompt = `
-        You are a professional news editor. I have provided raw news items from an RSS feed.
-        Your task is to:
-        1. Select the top ${itemCount} most relevant items.
-        2. Summarize each news item into 1-2 clean sentences.
-        3. Translate EVERYTHING to ${language}.
-        4. Exclude these titles: [${excludeTitles.join(", ")}].
+        Translate and format these raw RSS news items.
+        Target Language: ${language}
+        Exclude these titles: [${excludeTitles.join(", ")}]
         
-        RAW RSS DATA:
+        DATA:
         ${JSON.stringify(realNewsItems)}
 
-        JSON FORMAT:
-        { "points": [ { "summary": "Full summary in ${language}", "title": "Headline in ${language}", "sourceName": "Actual Source Name", "sourceUrl": "Actual Link" } ] }
+        JSON FORMAT REQUIREMENT:
+        { "points": [ { "summary": "1 sentence in ${language}", "title": "Headline in ${language}", "sourceName": "News Source", "sourceUrl": "Link" } ] }
+        ONLY OUTPUT JSON. NO EXTRA TEXT.
       `;
 
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -160,23 +167,31 @@ export const handler: Handler = async (
         body: JSON.stringify({
           model: orModelId,
           messages: [
-            { role: "system", content: `You are a reliable news editor. Output strictly valid JSON and translate to ${language}.` },
+            { role: "system", content: "You are a professional news editor. You only output valid JSON. No conversation." },
             { role: "user", content: orPrompt }
           ],
-          response_format: { type: "json_object" }
+          response_format: { type: "json_object" },
+          temperature: 0.1 // Stricter output
         })
       });
 
-      if (!response.ok) throw new Error(`OpenRouter API error: ${response.status}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`OpenRouter API error: ${response.status} ${errorText.substring(0, 100)}`);
+      }
+
       const json = await response.json();
-      finalData = parseJSONResponse(json.choices[0]?.message?.content || "", cacheKey);
+      const rawText = json.choices[0]?.message?.content;
+      if (!rawText) throw new Error("Empty response from OpenRouter");
+      finalData = parseJSONResponse(rawText, cacheKey);
     }
 
+    // Cache and return
     newsCache.set(cacheKey, { data: finalData, timestamp: now });
     return { statusCode: 200, headers, body: JSON.stringify(finalData) };
 
   } catch (error: any) {
-    console.error("Aggregation Error:", error);
+    console.error("Function Error:", error);
     return {
       statusCode: 500,
       headers,
