@@ -255,14 +255,17 @@ const App: React.FC = () => {
       <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 sticky top-0 z-20 transition-colors duration-300">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div>
-            <a href="https://newsator.netlify.app/" className="hover:opacity-80 transition-opacity">
-              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                <span className="text-blue-600 dark:text-blue-400">News</span>ator AI
-              </h1>
+            <a href="https://newsator.netlify.app/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <img src="/logo.png" alt="Newsator Logo" className="w-10 h-10 object-contain" />
+              <div>
+                <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+                  <span className="text-blue-600 dark:text-blue-400">News</span>ator AI
+                </h1>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">
+                  Powered by Gemini
+                </p>
+              </div>
             </a>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Real-time news powered by Gemini
-            </p>
           </div>
           <div className="flex items-center gap-3">
             <LanguageSelector 
