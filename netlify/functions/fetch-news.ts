@@ -77,7 +77,7 @@ export const handler: Handler = async (
       "Gemini 2.0": "gemini-2.0-flash-lite",
     };
     
-    const targetModel = modelMapping[model] || "gemini-2.5-flash";
+    const targetModel = modelMapping[model] || "gemini-1.5-flash";
 
     const isOverview = mode === "Overview";
     const itemCount = 10; // Forced batches of 10 for speed and stability
