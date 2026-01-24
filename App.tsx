@@ -376,13 +376,17 @@ const App: React.FC = () => {
 
         {/* Error State */}
         {error && (
-          <div className="flex items-center justify-center py-12">
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 p-6 rounded-lg max-w-lg border border-red-100 dark:border-red-900">
-              <p className="font-semibold mb-2">Unable to fetch news</p>
-              <p className="text-sm mb-4">{error}</p>
+          <div className="flex items-center justify-center py-12 px-4">
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 p-6 rounded-2xl max-w-lg w-full border border-red-100 dark:border-red-900 shadow-sm overflow-hidden break-words">
+              <p className="font-semibold mb-2 flex items-center gap-2">
+                <span>⚠️</span> Unable to fetch news
+              </p>
+              <p className="text-sm mb-4 opacity-90 leading-relaxed break-words">
+                {error}
+              </p>
               <button 
                 onClick={() => selectedCategory && handleCategorySelect(selectedCategory)}
-                className="px-4 py-2 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-md text-sm hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                className="px-4 py-2 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-md text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors shadow-sm"
               >
                 Try Again
               </button>
