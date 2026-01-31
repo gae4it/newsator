@@ -381,123 +381,128 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* No category selected */}
-        {appMode === AppMode.READ && !selectedCategory && !isLoading && (
-          <div className="flex flex-col items-center justify-center py-20 opacity-60">
-            <div className="inline-block p-6 rounded-full bg-slate-200 dark:bg-slate-800 mb-4">
-              <span className="text-4xl">📰</span>
-            </div>
-            <h2 className="text-xl font-medium text-slate-700 dark:text-slate-300">
-              Select a category
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-              Choose from the categories above to load more specific news.
-            </p>
-          </div>
-        )}
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="space-y-4">
-            {viewMode === ViewMode.SUMMARY ? (
-              <>
-                <LoadingSkeleton />
-                <LoadingSkeleton />
-                <LoadingSkeleton />
-              </>
-            ) : (
-              <OverviewSkeleton />
-            )}
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <div className="flex items-center justify-center py-12 px-4">
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 p-6 rounded-2xl max-w-lg w-full border border-red-100 dark:border-red-900 shadow-sm overflow-hidden break-words">
-              <p className="font-semibold mb-2 flex items-center gap-2">
-                <span>⚠️</span> Unable to fetch news
-              </p>
-              <p className="text-sm mb-4 opacity-90 leading-relaxed break-words">{error}</p>
-              <button
-                onClick={() => selectedCategory && handleCategorySelect(selectedCategory)}
-                className="px-4 py-2 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-md text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors shadow-sm"
-              >
-                Try Again
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* News Feed - Display all news points as individual cards or rows */}
-        {currentNews && !isLoading && selectedCategory && (
+        {/* Read Mode Components */}
+        {appMode === AppMode.READ && (
           <>
-            {/* Header with timestamp and refresh button */}
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                <span>📰</span>
-                <span>
-                  {lastUpdated && (
-                    <>
-                      Updated {formatTimestamp(lastUpdated)}
-                      <span className="ml-2 text-xs opacity-60">(cached for 30 min)</span>
-                    </>
-                  )}
-                </span>
-              </div>
-              <button
-                onClick={handleRefresh}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Refresh news"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                Refresh
-              </button>
-            </div>
-
-            {viewMode === ViewMode.SUMMARY ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {currentNews.points.map((point, index) => (
-                  <NewsCardFeed key={index} newsPoint={point} category={selectedCategory} />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white dark:bg-slate-900/50 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
-                {currentNews.points.map((point, index) => (
-                  <NewsHeadlineRow key={index} newsPoint={point} category={selectedCategory} />
-                ))}
+            {/* No category selected */}
+            {!selectedCategory && !isLoading && (
+              <div className="flex flex-col items-center justify-center py-20 opacity-60">
+                <div className="inline-block p-6 rounded-full bg-slate-200 dark:bg-slate-800 mb-4">
+                  <span className="text-4xl">📰</span>
+                </div>
+                <h2 className="text-xl font-medium text-slate-700 dark:text-slate-300">
+                  Select a category
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                  Choose from the categories above to load more specific news.
+                </p>
               </div>
             )}
 
-            {/* Load More Button - Centered below news content */}
-            {currentNews.points.length < (viewMode === ViewMode.OVERVIEW ? 50 : 10) && (
-              <div className="flex justify-center mt-10">
-                <button
-                  onClick={handleLoadMore}
-                  disabled={isLoadingMore}
-                  className="px-8 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 font-semibold rounded-xl shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:scale-100 flex items-center gap-3"
-                >
-                  {isLoadingMore ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                      Searching more news...
-                    </>
-                  ) : (
-                    <>
-                      <span>➕</span> Load More{' '}
-                      {viewMode === ViewMode.OVERVIEW ? 'Headlines' : 'Cards'}
-                    </>
-                  )}
-                </button>
+            {/* Loading State */}
+            {isLoading && (
+              <div className="space-y-4">
+                {viewMode === ViewMode.SUMMARY ? (
+                  <>
+                    <LoadingSkeleton />
+                    <LoadingSkeleton />
+                    <LoadingSkeleton />
+                  </>
+                ) : (
+                  <OverviewSkeleton />
+                )}
               </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+              <div className="flex items-center justify-center py-12 px-4">
+                <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 p-6 rounded-2xl max-w-lg w-full border border-red-100 dark:border-red-900 shadow-sm overflow-hidden break-words">
+                  <p className="font-semibold mb-2 flex items-center gap-2">
+                    <span>⚠️</span> Unable to fetch news
+                  </p>
+                  <p className="text-sm mb-4 opacity-90 leading-relaxed break-words">{error}</p>
+                  <button
+                    onClick={() => selectedCategory && handleCategorySelect(selectedCategory)}
+                    className="px-4 py-2 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-md text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors shadow-sm"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* News Feed - Display all news points as individual cards or rows */}
+            {currentNews && !isLoading && selectedCategory && (
+              <>
+                {/* Header with timestamp and refresh button */}
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                    <span>📰</span>
+                    <span>
+                      {lastUpdated && (
+                        <>
+                          Updated {formatTimestamp(lastUpdated)}
+                          <span className="ml-2 text-xs opacity-60">(cached for 30 min)</span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleRefresh}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Refresh news"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    Refresh
+                  </button>
+                </div>
+
+                {viewMode === ViewMode.SUMMARY ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {currentNews.points.map((point, index) => (
+                      <NewsCardFeed key={index} newsPoint={point} category={selectedCategory} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white dark:bg-slate-900/50 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+                    {currentNews.points.map((point, index) => (
+                      <NewsHeadlineRow key={index} newsPoint={point} category={selectedCategory} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Load More Button - Centered below news content */}
+                {currentNews.points.length < (viewMode === ViewMode.OVERVIEW ? 50 : 10) && (
+                  <div className="flex justify-center mt-10">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore}
+                      className="px-8 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 font-semibold rounded-xl shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:scale-100 flex items-center gap-3"
+                    >
+                      {isLoadingMore ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                          Searching more news...
+                        </>
+                      ) : (
+                        <>
+                          <span>➕</span> Load More{' '}
+                          {viewMode === ViewMode.OVERVIEW ? 'Headlines' : 'Cards'}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
