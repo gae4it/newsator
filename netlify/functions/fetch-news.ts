@@ -95,7 +95,7 @@ export const handler: Handler = async (
       if (!apiKey) throw new Error("GEMINI_API_KEY not found");
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const geminiModelId = model === "Gemini 2.0" ? "gemini-2.0-flash-lite-preview-02-05" : "gemini-1.5-flash-latest";
+      const geminiModelId = model === "Gemini 2.0" ? "gemini-2.0-flash" : "gemini-1.5-flash";
       
       const genModel = genAI.getGenerativeModel({ 
         model: geminiModelId,
@@ -109,7 +109,7 @@ export const handler: Handler = async (
         Latest news for: Region ${region}, Category ${category}, Mode ${mode}.
         - Language: ${language}
         - Quantity: ${itemCount} items
-        - Avoid: [${limitedExcludeTitles.join(", ")}]
+        ${limitedExcludeTitles.length > 0 ? `- IMPORTANT: DO NOT include these stories (they are already shown): [${limitedExcludeTitles.join(", ")}]` : ""}
         - Format: { "points": [ { "title": "Headline", "summary": "1-2 sentences", "sourceName": "Source", "sourceUrl": "URL" } ] }
       `;
 
@@ -132,19 +132,31 @@ export const handler: Handler = async (
       
       const feed = await Promise.race([
         parser.parseURL(rssUrl),
-        new Promise<null>((_, reject) => setTimeout(() => reject(new Error("RSS Fetch Timeout")), 4000))
+        new Promise<null>((_, reject) => setTimeout(() => reject(new Error("RSS Fetch Timeout")), 5000))
       ]);
       
       if (!feed || !feed.items) throw new Error("Unable to fetch RSS feed items");
 
-      // Optimization: Limit to 5 items for speed (prevents 502)
-      const realNewsItems = feed.items.slice(0, 5).map(item => ({
-        title: item.title?.substring(0, 100),
+      // Filter out already shown news
+      const filteredFeedItems = feed.items.filter(item => {
+        if (!item.title) return false;
+        const cleanTitle = item.title.split(" - ")[0].toLowerCase(); // Basic normalization
+        return !excludeTitles.some((ex: string) => ex.toLowerCase().includes(cleanTitle) || cleanTitle.includes(ex.toLowerCase()));
+      });
+
+      // Take the next 5 items for the AI to summarize
+      const realNewsItems = filteredFeedItems.slice(0, 5).map(item => ({
+        title: item.title?.substring(0, 150),
         link: item.link
       }));
 
+      if (realNewsItems.length === 0 && !isInitialLoad) {
+        throw new Error("No more new stories found in this category.");
+      }
+
       const orPrompt = `
-        MANDATORY TASK: Summarize and format these 5 fresh news items into valid JSON.
+        MANDATORY TASK: Summarize and format these ${realNewsItems.length} fresh news items into valid JSON.
+        ${excludeTitles.length > 0 ? "NOTE: These are different from the ones you already summarized." : ""}
         JSON KEY NAME: Use "points" for the array of news.
         LANGUAGE: All content must be in ${language}.
         
