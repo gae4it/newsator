@@ -36,7 +36,10 @@ const App: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.SUMMARY);
   const [selectedModel, setSelectedModel] = useState<AIModel>(AIModel.GEMINI_1_5);
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>(Language.EN);
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(() => {
+    const saved = localStorage.getItem('language');
+    return (saved as Language) || Language.EN;
+  });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [appMode, setAppMode] = useState<AppMode>(AppMode.READ);
@@ -87,6 +90,11 @@ const App: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, []);
+
+  // Persist language preference
+  useEffect(() => {
+    localStorage.setItem('language', selectedLanguage);
+  }, [selectedLanguage]);
 
   const toggleTheme = () => {
     if (theme === 'light') {
