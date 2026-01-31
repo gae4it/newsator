@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface PWAInstallButtonProps {
-  deferredPrompt: any;
+  deferredPrompt: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   onInstall: () => void;
 }
 

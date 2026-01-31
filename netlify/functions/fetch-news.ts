@@ -6,11 +6,13 @@ const parser = new Parser();
 
 // In-memory cache to store results for 30 minutes
 const CACHE_DURATION_MS = 30 * 60 * 1000;
-const newsCache: Map<string, { data: any; timestamp: number }> = new Map();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const newsCache: Map<string, { data: { points: any[] }; timestamp: number }> = new Map();
 
 /**
  * Helper to clean and parse JSON from AI responses
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseJSONResponse(text: string, cacheKey: string): { points: any[] } {
   let cleanedText = text.trim();
 
@@ -130,6 +132,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
       const result = await genModel.generateContent({
         contents: [{ role: 'user', parts: [{ text: promptText }] }],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         tools: [{ googleSearch: {} }] as any,
       });
 
@@ -216,7 +219,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
     newsCache.set(cacheKey, { data: finalData, timestamp: now });
     return { statusCode: 200, headers, body: JSON.stringify(finalData) };
   } catch (error: unknown) {
-    const err = error as any;
+    const err = error as { message?: string; status?: number };
     console.error('Function Error:', err);
 
     // Check if it's a quota error (429)

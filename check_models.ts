@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
 // Simple .env parser
 const parseEnv = () => {
@@ -15,7 +14,7 @@ const parseEnv = () => {
       }
     });
     return env;
-  } catch (e) {
+  } catch {
     console.error('Could not read .env.local');
     return {};
   }
@@ -42,13 +41,15 @@ const main = async () => {
       console.error('API Error:', JSON.stringify(data.error, null, 2));
     } else {
       console.log('Available Models:');
-      data.models?.forEach((m: any) => {
-        if (m.name.includes('flash') || m.name.includes('gemini')) {
-          console.log(
-            `- ${m.name} (${m.version}) [Methods: ${m.supportedGenerationMethods?.join(', ')}]`
-          );
+      data.models?.forEach(
+        (m: { name: string; version?: string; supportedGenerationMethods?: string[] }) => {
+          if (m.name.includes('flash') || m.name.includes('gemini')) {
+            console.log(
+              `- ${m.name} (${m.version || 'unknown'}) [Methods: ${m.supportedGenerationMethods?.join(', ') || 'N/A'}]`
+            );
+          }
         }
-      });
+      );
     }
   } catch (e) {
     console.error('Fetch error:', e);

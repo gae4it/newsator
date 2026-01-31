@@ -3,7 +3,6 @@ import {
   Region,
   NewsCategory,
   NewsTopic,
-  NewsPoint,
   ViewMode,
   AIModel,
   Language,
@@ -38,12 +37,14 @@ const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.SUMMARY);
   const [selectedModel, setSelectedModel] = useState<AIModel>(AIModel.GEMINI_1_5);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(Language.EN);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [appMode, setAppMode] = useState<AppMode>(AppMode.READ);
   const [selectedPromptType, setSelectedPromptType] = useState<PromptType>(PromptType.EXTENDED);
 
   // PWA Install Prompt Listener
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleBeforeInstallPrompt = (e: any) => {
       // Prevent automatic prompt
       e.preventDefault();
@@ -142,7 +143,15 @@ const App: React.FC = () => {
         setIsLoading(false);
       }
     },
-    [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, selectedLanguage]
+    [
+      selectedRegion,
+      selectedCategory,
+      currentNews,
+      viewMode,
+      selectedModel,
+      selectedLanguage,
+      appMode,
+    ]
   );
 
   const handleLoadMore = useCallback(async () => {
@@ -274,7 +283,7 @@ const App: React.FC = () => {
     if (selectedCategory) {
       handleRefresh();
     }
-  }, [selectedLanguage]); // Only trigger when language changes
+  }, [selectedLanguage, handleRefresh, selectedCategory]); // Only trigger when language changes
 
   const formatTimestamp = (date: Date | null): string => {
     if (!date) return '';
