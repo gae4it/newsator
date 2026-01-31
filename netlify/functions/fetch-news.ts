@@ -50,8 +50,7 @@ function parseJSONResponse(text: string, cacheKey: string): any {
 }
 
 export const handler: Handler = async (
-  event: HandlerEvent,
-  context: HandlerContext
+  event: HandlerEvent
 ) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
@@ -85,7 +84,6 @@ export const handler: Handler = async (
     // Limit excludeTitles to avoid prompt bloat
     const limitedExcludeTitles = excludeTitles.slice(-20);
 
-    const isOverview = mode === "Headlines Only";
     const itemCount = 10;
     let finalData;
 
@@ -196,10 +194,18 @@ export const handler: Handler = async (
 
   } catch (error: any) {
     console.error("Function Error:", error);
+    
+    // Check if it's a quota error (429)
+    const isQuotaError = error.message?.includes("429") || error.status === 429 || error.message?.includes("quota");
+    const statusCode = isQuotaError ? 429 : 500;
+    const errorMessage = isQuotaError 
+      ? "AI Quota Exceeded. Please wait a few minutes or switch to a different AI model."
+      : (error.message || "Internal server error");
+
     return {
-      statusCode: 500,
+      statusCode,
       headers,
-      body: JSON.stringify({ error: error.message || "Internal server error" }),
+      body: JSON.stringify({ error: errorMessage }),
     };
   }
 };
