@@ -151,15 +151,8 @@ const App: React.FC = () => {
         setIsLoading(false);
       }
     },
-    [
-      selectedRegion,
-      selectedCategory,
-      currentNews,
-      viewMode,
-      selectedModel,
-      selectedLanguage,
-      appMode,
-    ]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedRegion, selectedCategory, viewMode, selectedModel, selectedLanguage, appMode]
   );
 
   const handleLoadMore = useCallback(async () => {
@@ -193,16 +186,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [
-    selectedRegion,
-    selectedCategory,
-    currentNews,
-    viewMode,
-    selectedModel,
-    selectedLanguage,
-    isLoading,
-    isLoadingMore,
-  ]);
+  }, [selectedRegion, selectedCategory, viewMode, selectedModel, selectedLanguage]);
 
   const handleModeChange = useCallback(
     async (mode: ViewMode) => {
@@ -284,7 +268,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedRegion, selectedCategory, isLoading, viewMode, selectedModel, selectedLanguage]);
+  }, [selectedRegion, selectedCategory, viewMode, selectedModel, selectedLanguage]);
 
   // Handle language change auto-refresh
   useEffect(() => {
