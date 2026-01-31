@@ -22,10 +22,10 @@ const categoryIcons: Record<NewsCategory, string> = {
   [NewsCategory.SPORT]: '⚽',
 };
 
-export const CategorySelector: React.FC<CategorySelectorProps> = ({ 
-  selectedCategory, 
-  onSelect, 
-  disabled 
+export const CategorySelector: React.FC<CategorySelectorProps> = ({
+  selectedCategory,
+  onSelect,
+  disabled,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -57,7 +57,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
       const scrollAmount = 200;
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
+        behavior: 'smooth',
       });
     }
   };
@@ -65,24 +65,28 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
   return (
     <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300 relative group">
       <div className="max-w-4xl md:max-w-5xl mx-auto relative flex items-center">
-        
         {/* Left Arrow Button - Desktop Only */}
         {showLeftArrow && (
-          <button 
+          <button
             onClick={() => scroll('left')}
             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-full shadow-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hidden md:flex hover:scale-110 active:scale-95 transition-all"
             aria-label="Scroll left"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
         )}
 
         {/* Categories Container */}
-        <div 
+        <div
           ref={scrollRef}
-          className="flex gap-2 overflow-x-auto py-3 px-4 scrollbar-hide scroll-smooth w-full" 
+          className="flex gap-2 overflow-x-auto py-3 px-4 scrollbar-hide scroll-smooth w-full"
           style={{ scrollbarWidth: 'none' }}
         >
           {Object.values(NewsCategory).map((category) => {
@@ -94,9 +98,10 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
                 disabled={disabled}
                 className={`
                   px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 flex-shrink-0 whitespace-nowrap m-0.5
-                  ${isSelected 
-                    ? 'bg-blue-600 text-white shadow-md scale-105 z-10' 
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  ${
+                    isSelected
+                      ? 'bg-blue-600 text-white shadow-md scale-105 z-10'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }
                   ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                 `}
@@ -110,7 +115,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
 
         {/* Right Arrow Button - Desktop Only */}
         {showRightArrow && (
-          <button 
+          <button
             onClick={() => scroll('right')}
             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-full shadow-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hidden md:flex hover:scale-110 active:scale-95 transition-all"
             aria-label="Scroll right"

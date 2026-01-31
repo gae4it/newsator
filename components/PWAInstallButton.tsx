@@ -5,7 +5,10 @@ interface PWAInstallButtonProps {
   onInstall: () => void;
 }
 
-export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ deferredPrompt, onInstall }) => {
+export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
+  deferredPrompt,
+  onInstall,
+}) => {
   // If no prompt event is available, don't show the button
   // (Note: Browsers like Chrome on Desktop or Android fire this)
   if (!deferredPrompt) return null;
@@ -17,15 +20,15 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ deferredProm
       title="Install App"
       aria-label="Install Newsator AI as Web App"
     >
-      <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        width="20" 
-        height="20" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="2.5" 
-        strokeLinecap="round" 
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
         strokeLinejoin="round"
       >
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>

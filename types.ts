@@ -10,36 +10,36 @@ export enum Region {
   UK = 'UK',
   BADEN_WUERTTEMBERG = 'Baden-Württemberg',
   BAYERN = 'Bayern',
-  LOMBARDIA = 'Lombardia'
+  LOMBARDIA = 'Lombardia',
 }
 
 export enum ViewMode {
   SUMMARY = 'Detailed Report',
-  OVERVIEW = 'Headlines Only'
+  OVERVIEW = 'Headlines Only',
 }
 
 export enum AppMode {
   PROMPT = 'Prompt Mode',
-  READ = 'Read Mode'
+  READ = 'Read Mode',
 }
 
 export enum PromptType {
   EXTENDED = 'Detailed Report',
-  TITLES = 'Headlines Only'
+  TITLES = 'Headlines Only',
 }
 
 export enum AIModel {
   GEMINI_1_5 = 'Gemini 1.5',
   GEMINI_2_0 = 'Gemini 2.0',
   LLAMA_3 = 'Llama 3',
-  MISTRAL = 'Mistral'
+  MISTRAL = 'Mistral',
 }
 
 export enum Language {
   EN = 'English',
   DE = 'Deutsch',
   ES = 'Español',
-  IT = 'Italiano'
+  IT = 'Italiano',
 }
 
 export enum NewsCategory {
@@ -54,7 +54,7 @@ export enum NewsCategory {
   CLIMATE = 'Climate & Environment',
   HEALTH = 'Health',
   CULTURE = 'Culture',
-  SPORT = 'Sport'
+  SPORT = 'Sport',
 }
 
 export interface NewsPoint {

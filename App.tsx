@@ -1,5 +1,15 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Region, NewsCategory, NewsTopic, NewsPoint, ViewMode, AIModel, Language, AppMode, PromptType } from './types';
+import {
+  Region,
+  NewsCategory,
+  NewsTopic,
+  NewsPoint,
+  ViewMode,
+  AIModel,
+  Language,
+  AppMode,
+  PromptType,
+} from './types';
 import { fetchNewsSummary } from './services/geminiService';
 import { RegionSelector } from './components/RegionSelector';
 import { CategorySelector } from './components/CategorySelector';
@@ -51,14 +61,14 @@ const App: React.FC = () => {
 
   const handleInstallClick = useCallback(async () => {
     if (!deferredPrompt) return;
-    
+
     // Show the install prompt
     deferredPrompt.prompt();
-    
+
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
     console.log(`User response to the install prompt: ${outcome}`);
-    
+
     // We've used the prompt, and can't use it again, so clear it
     setDeferredPrompt(null);
   }, [deferredPrompt]);
@@ -98,109 +108,162 @@ const App: React.FC = () => {
     setError(null);
   }, []);
 
-  const handleCategorySelect = useCallback(async (category: NewsCategory) => {
-    if (category === selectedCategory && currentNews) return;
+  const handleCategorySelect = useCallback(
+    async (category: NewsCategory) => {
+      if (category === selectedCategory && currentNews) return;
 
-    setSelectedCategory(category);
-    
-    // Only fetch news if in READ mode
-    if (appMode !== AppMode.READ) {
-      setCurrentNews(null);
+      setSelectedCategory(category);
+
+      // Only fetch news if in READ mode
+      if (appMode !== AppMode.READ) {
+        setCurrentNews(null);
+        setError(null);
+        return;
+      }
+
+      setIsLoading(true);
       setError(null);
-      return;
-    }
+      setCurrentNews(null);
 
-    setIsLoading(true);
-    setError(null);
-    setCurrentNews(null);
-
-    try {
-      const data = await fetchNewsSummary(selectedRegion, category, viewMode, selectedModel, [], selectedLanguage);
-      setCurrentNews(data);
-      setLastUpdated(new Date());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, selectedLanguage]);
+      try {
+        const data = await fetchNewsSummary(
+          selectedRegion,
+          category,
+          viewMode,
+          selectedModel,
+          [],
+          selectedLanguage
+        );
+        setCurrentNews(data);
+        setLastUpdated(new Date());
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, selectedLanguage]
+  );
 
   const handleLoadMore = useCallback(async () => {
     if (!selectedCategory || !currentNews || isLoading || isLoadingMore) return;
-    
+
     const limit = viewMode === ViewMode.OVERVIEW ? 50 : 10;
     if (currentNews.points.length >= limit) return;
 
     setIsLoadingMore(true);
     setError(null);
 
-    const excludeTitles = currentNews.points.map(p => p.title);
+    const excludeTitles = currentNews.points.map((p) => p.title);
 
     try {
-      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, selectedModel, excludeTitles, selectedLanguage);
-      
+      const data = await fetchNewsSummary(
+        selectedRegion,
+        selectedCategory,
+        viewMode,
+        selectedModel,
+        excludeTitles,
+        selectedLanguage
+      );
+
       const updatedPoints = [...currentNews.points, ...data.points];
       setCurrentNews({
         ...currentNews,
-        points: updatedPoints
+        points: updatedPoints,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load more news.");
+      setError(err instanceof Error ? err.message : 'Failed to load more news.');
     } finally {
       setIsLoadingMore(false);
     }
-  }, [selectedRegion, selectedCategory, currentNews, viewMode, selectedModel, selectedLanguage, isLoading, isLoadingMore]);
+  }, [
+    selectedRegion,
+    selectedCategory,
+    currentNews,
+    viewMode,
+    selectedModel,
+    selectedLanguage,
+    isLoading,
+    isLoadingMore,
+  ]);
 
-  const handleModeChange = useCallback(async (mode: ViewMode) => {
-    setViewMode(mode);
-    if (!selectedCategory) return;
+  const handleModeChange = useCallback(
+    async (mode: ViewMode) => {
+      setViewMode(mode);
+      if (!selectedCategory) return;
 
-    setIsLoading(true);
-    setError(null);
-    setCurrentNews(null);
+      setIsLoading(true);
+      setError(null);
+      setCurrentNews(null);
 
-    try {
-      const data = await fetchNewsSummary(selectedRegion, selectedCategory, mode, selectedModel, [], selectedLanguage);
-      setCurrentNews(data);
-      setLastUpdated(new Date());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedRegion, selectedCategory, selectedModel, selectedLanguage]);
+      try {
+        const data = await fetchNewsSummary(
+          selectedRegion,
+          selectedCategory,
+          mode,
+          selectedModel,
+          [],
+          selectedLanguage
+        );
+        setCurrentNews(data);
+        setLastUpdated(new Date());
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [selectedRegion, selectedCategory, selectedModel, selectedLanguage]
+  );
 
-  const handleModelChange = useCallback(async (model: AIModel) => {
-    setSelectedModel(model);
-    if (!selectedCategory) return;
+  const handleModelChange = useCallback(
+    async (model: AIModel) => {
+      setSelectedModel(model);
+      if (!selectedCategory) return;
 
-    setIsLoading(true);
-    setError(null);
-    setCurrentNews(null);
+      setIsLoading(true);
+      setError(null);
+      setCurrentNews(null);
 
-    try {
-      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, model, [], selectedLanguage);
-      setCurrentNews(data);
-      setLastUpdated(new Date());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedRegion, selectedCategory, viewMode, selectedLanguage]);
+      try {
+        const data = await fetchNewsSummary(
+          selectedRegion,
+          selectedCategory,
+          viewMode,
+          model,
+          [],
+          selectedLanguage
+        );
+        setCurrentNews(data);
+        setLastUpdated(new Date());
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [selectedRegion, selectedCategory, viewMode, selectedLanguage]
+  );
 
   const handleRefresh = useCallback(async () => {
     if (!selectedCategory || isLoading) return;
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      const data = await fetchNewsSummary(selectedRegion, selectedCategory, viewMode, selectedModel, [], selectedLanguage);
+      const data = await fetchNewsSummary(
+        selectedRegion,
+        selectedCategory,
+        viewMode,
+        selectedModel,
+        [],
+        selectedLanguage
+      );
       setCurrentNews(data);
       setLastUpdated(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
@@ -218,11 +281,11 @@ const App: React.FC = () => {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return 'Just now';
     if (diffMins === 1) return '1 minute ago';
     if (diffMins < 60) return `${diffMins} minutes ago`;
-    
+
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours === 1) return '1 hour ago';
     return `${diffHours} hours ago`;
@@ -230,12 +293,14 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
-      
       {/* Header */}
       <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 sticky top-0 z-20 transition-colors duration-300">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div>
-            <a href="https://newsator.netlify.app/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <a
+              href="https://newsator.netlify.app/"
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            >
               <img src="/logo.png" alt="Newsator Logo" className="w-10 h-10 object-contain" />
               <div>
                 <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
@@ -248,23 +313,20 @@ const App: React.FC = () => {
             </a>
           </div>
           <div className="flex items-center gap-3">
-            <PWAInstallButton 
-              deferredPrompt={deferredPrompt} 
-              onInstall={handleInstallClick} 
-            />
+            <PWAInstallButton deferredPrompt={deferredPrompt} onInstall={handleInstallClick} />
             <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-            <LanguageSelector 
-              currentLanguage={selectedLanguage} 
-              onLanguageChange={setSelectedLanguage} 
+            <LanguageSelector
+              currentLanguage={selectedLanguage}
+              onLanguageChange={setSelectedLanguage}
             />
           </div>
         </div>
       </header>
-      
+
       {/* Region Selector - Circular Avatars */}
-      <RegionSelector 
-        selectedRegion={selectedRegion} 
-        onSelect={handleRegionSelect} 
+      <RegionSelector
+        selectedRegion={selectedRegion}
+        onSelect={handleRegionSelect}
         disabled={isLoading}
       />
 
@@ -277,30 +339,26 @@ const App: React.FC = () => {
 
       {/* Selectors Bar - Always visible under filters */}
       <div className="flex flex-col items-center justify-center gap-4 my-6 px-4">
-        <AppModeSelector 
-          selectedMode={appMode}
-          onSelect={setAppMode}
-          disabled={isLoading}
-        />
-        
+        <AppModeSelector selectedMode={appMode} onSelect={setAppMode} disabled={isLoading} />
+
         {appMode === AppMode.READ && (
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
-            <ModeSelector 
-              selectedMode={viewMode} 
-              onSelect={handleModeChange} 
-              disabled={isLoading} 
+            <ModeSelector
+              selectedMode={viewMode}
+              onSelect={handleModeChange}
+              disabled={isLoading}
             />
-            <ModelSelector 
-              selectedModel={selectedModel} 
-              onSelect={handleModelChange} 
-              disabled={isLoading} 
+            <ModelSelector
+              selectedModel={selectedModel}
+              onSelect={handleModelChange}
+              disabled={isLoading}
             />
           </div>
         )}
 
         {appMode === AppMode.PROMPT && selectedCategory && (
           <div className="w-full">
-            <PromptTypeSelector 
+            <PromptTypeSelector
               selectedType={selectedPromptType}
               onSelect={setSelectedPromptType}
             />
@@ -314,7 +372,7 @@ const App: React.FC = () => {
         {/* Prompt Mode Components */}
         {appMode === AppMode.PROMPT && selectedCategory && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <PromptCopyButton 
+            <PromptCopyButton
               region={selectedRegion}
               category={selectedCategory}
               language={selectedLanguage}
@@ -360,10 +418,8 @@ const App: React.FC = () => {
               <p className="font-semibold mb-2 flex items-center gap-2">
                 <span>⚠️</span> Unable to fetch news
               </p>
-              <p className="text-sm mb-4 opacity-90 leading-relaxed break-words">
-                {error}
-              </p>
-              <button 
+              <p className="text-sm mb-4 opacity-90 leading-relaxed break-words">{error}</p>
+              <button
                 onClick={() => selectedCategory && handleCategorySelect(selectedCategory)}
                 className="px-4 py-2 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-md text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors shadow-sm"
               >
@@ -396,30 +452,27 @@ const App: React.FC = () => {
                 title="Refresh news"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
                 </svg>
                 Refresh
               </button>
             </div>
-            
+
             {viewMode === ViewMode.SUMMARY ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {currentNews.points.map((point, index) => (
-                  <NewsCardFeed 
-                    key={index} 
-                    newsPoint={point} 
-                    category={selectedCategory}
-                  />
+                  <NewsCardFeed key={index} newsPoint={point} category={selectedCategory} />
                 ))}
               </div>
             ) : (
               <div className="bg-white dark:bg-slate-900/50 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
                 {currentNews.points.map((point, index) => (
-                  <NewsHeadlineRow 
-                    key={index} 
-                    newsPoint={point} 
-                    category={selectedCategory}
-                  />
+                  <NewsHeadlineRow key={index} newsPoint={point} category={selectedCategory} />
                 ))}
               </div>
             )}
@@ -439,7 +492,8 @@ const App: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <span>➕</span> Load More {viewMode === ViewMode.OVERVIEW ? 'Headlines' : 'Cards'}
+                      <span>➕</span> Load More{' '}
+                      {viewMode === ViewMode.OVERVIEW ? 'Headlines' : 'Cards'}
                     </>
                   )}
                 </button>
@@ -452,31 +506,30 @@ const App: React.FC = () => {
       {/* Footer */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-6 py-4 mt-12 text-center transition-colors duration-300">
         <div className="max-w-4xl mx-auto">
-          
           <div className="flex items-center justify-center gap-4 text-xs">
-            <a 
-              href="/download.html" 
+            <a
+              href="/download.html"
               className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               Download App
             </a>
             <span className="text-slate-300 dark:text-slate-700">•</span>
-            <a 
-              href="/about.html" 
+            <a
+              href="/about.html"
               className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               About
             </a>
             <span className="text-slate-300 dark:text-slate-700">•</span>
-            <a 
-              href="/privacy.html" 
+            <a
+              href="/privacy.html"
               className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               Privacy Policy
             </a>
             <span className="text-slate-300 dark:text-slate-700">•</span>
-            <a 
-              href="/terms.html" 
+            <a
+              href="/terms.html"
               className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               Terms of Service
@@ -490,7 +543,6 @@ const App: React.FC = () => {
           </p>
         </div>
       </footer>
-
     </div>
   );
 };

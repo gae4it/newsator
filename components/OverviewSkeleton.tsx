@@ -7,7 +7,7 @@ export const OverviewSkeleton: React.FC = () => {
         <div key={i} className="p-4 flex flex-col gap-2">
           {/* Title Placeholder */}
           <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-3/4"></div>
-          
+
           {/* Source Placeholder */}
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-slate-200 dark:bg-slate-800 rounded-full"></div>

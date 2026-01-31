@@ -33,9 +33,9 @@ export const NewsCard: React.FC<NewsCardProps> = ({ topic }) => {
             </p>
             <div className="flex items-center gap-1">
               <span className="text-xs text-slate-400 dark:text-slate-500">Source:</span>
-              <a 
+              <a
                 href={`https://www.google.com/search?q=${encodeURIComponent(point.summary)}`}
-                target="_blank" 
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline truncate max-w-[200px]"
               >

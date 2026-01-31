@@ -7,7 +7,11 @@ interface ModelSelectorProps {
   disabled?: boolean;
 }
 
-export const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onSelect, disabled }) => {
+export const ModelSelector: React.FC<ModelSelectorProps> = ({
+  selectedModel,
+  onSelect,
+  disabled,
+}) => {
   const models = Object.values(AIModel);
 
   return (
@@ -19,9 +23,11 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onS
           disabled={disabled}
           className={`
             px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap
-            ${selectedModel === model 
-              ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm' 
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}
+            ${
+              selectedModel === model
+                ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            }
             ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           `}
         >

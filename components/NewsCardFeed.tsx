@@ -18,19 +18,26 @@ const categoryHeaders: Record<NewsCategory, string> = {
   [NewsCategory.CLIMATE]: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', // Green gradient
   [NewsCategory.HEALTH]: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)', // Teal gradient
   [NewsCategory.CULTURE]: 'linear-gradient(135deg, #db2777 0%, #ec4899 100%)', // Pink gradient
+  [NewsCategory.SOCIAL_TRENDS]: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', // Indigo to Violet
+  [NewsCategory.SPORT]: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)', // Blue gradient
 };
 
 const categoryColors: Record<NewsCategory, string> = {
   [NewsCategory.BREAKING]: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
   [NewsCategory.POLITICS]: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  [NewsCategory.ECONOMY]: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  [NewsCategory.BUSINESS]: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+  [NewsCategory.ECONOMY]:
+    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+  [NewsCategory.BUSINESS]:
+    'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
   [NewsCategory.TECHNOLOGY]: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
   [NewsCategory.CRIME]: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
   [NewsCategory.WORLD]: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
   [NewsCategory.CLIMATE]: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
   [NewsCategory.HEALTH]: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
   [NewsCategory.CULTURE]: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
+  [NewsCategory.SOCIAL_TRENDS]:
+    'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+  [NewsCategory.SPORT]: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
 };
 
 // Category to image mapping
@@ -45,24 +52,26 @@ const categoryImages: Record<NewsCategory, string> = {
   [NewsCategory.CLIMATE]: 'climate.png',
   [NewsCategory.HEALTH]: 'health.png',
   [NewsCategory.CULTURE]: 'culture.png',
+  [NewsCategory.SOCIAL_TRENDS]: 'social-trends.png',
+  [NewsCategory.SPORT]: 'sport.png',
 };
 
 export const NewsCardFeed: React.FC<NewsCardFeedProps> = ({ newsPoint, category }) => {
   const headerGradient = categoryHeaders[category];
   const imageName = categoryImages[category];
-  
+
   return (
     <article className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-all duration-300">
       {/* Category Header Image with Gradient Fallback */}
       <div className="h-32 relative overflow-hidden bg-slate-200 dark:bg-slate-700">
         {/* Gradient Fallback */}
-        <div 
+        <div
           className="absolute inset-0 w-full h-full opacity-50"
           style={{ background: headerGradient }}
         />
-        
+
         {/* Category Image */}
-        <img 
+        <img
           src={`/images/categories/${imageName}`}
           alt={category}
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
@@ -76,24 +85,25 @@ export const NewsCardFeed: React.FC<NewsCardFeedProps> = ({ newsPoint, category 
 
         {/* Category Badge */}
         <div className="absolute top-3 left-3">
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${categoryColors[category]}`}>
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${categoryColors[category]}`}
+          >
             {category}
           </span>
         </div>
       </div>
-
 
       {/* Content */}
       <div className="p-4">
         <p className="text-slate-800 dark:text-slate-200 text-sm leading-relaxed mb-3">
           {newsPoint.summary}
         </p>
-        
+
         {/* Footer */}
         <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-          <a 
+          <a
             href={`https://www.google.com/search?q=${encodeURIComponent(newsPoint.summary)}`}
-            target="_blank" 
+            target="_blank"
             rel="noopener noreferrer"
             className="font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate max-w-[200px]"
           >

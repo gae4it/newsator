@@ -6,9 +6,9 @@ interface PromptTypeSelectorProps {
   onSelect: (type: PromptType) => void;
 }
 
-export const PromptTypeSelector: React.FC<PromptTypeSelectorProps> = ({ 
-  selectedType, 
-  onSelect 
+export const PromptTypeSelector: React.FC<PromptTypeSelectorProps> = ({
+  selectedType,
+  onSelect,
 }) => {
   return (
     <div className="flex justify-center">
@@ -17,9 +17,10 @@ export const PromptTypeSelector: React.FC<PromptTypeSelectorProps> = ({
           onClick={() => onSelect(PromptType.EXTENDED)}
           className={`
             px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200
-            ${selectedType === PromptType.EXTENDED 
-              ? 'bg-blue-600 text-white shadow-md' 
-              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+            ${
+              selectedType === PromptType.EXTENDED
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
             }
           `}
         >
@@ -29,9 +30,10 @@ export const PromptTypeSelector: React.FC<PromptTypeSelectorProps> = ({
           onClick={() => onSelect(PromptType.TITLES)}
           className={`
             px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200
-            ${selectedType === PromptType.TITLES 
-              ? 'bg-blue-600 text-white shadow-md' 
-              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+            ${
+              selectedType === PromptType.TITLES
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
             }
           `}
         >

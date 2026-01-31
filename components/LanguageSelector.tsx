@@ -13,14 +13,14 @@ const languages = [
   { code: Language.IT, name: 'Italiano', flag: 'it' },
 ];
 
-export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ 
-  currentLanguage, 
-  onLanguageChange 
+export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
+  currentLanguage,
+  onLanguageChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const selectedLangInfo = languages.find(l => l.code === currentLanguage) || languages[0];
+  const selectedLangInfo = languages.find((l) => l.code === currentLanguage) || languages[0];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -40,8 +40,8 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         aria-label="Select Language"
         title="Select Language"
       >
-        <img 
-          src={`https://flagcdn.com/w40/${selectedLangInfo.flag}.png`} 
+        <img
+          src={`https://flagcdn.com/w40/${selectedLangInfo.flag}.png`}
           alt={selectedLangInfo.name}
           className="w-full h-full object-cover"
         />
@@ -58,14 +58,16 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               }}
               className={`
                 w-full px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors
-                ${currentLanguage === lang.code 
-                  ? 'text-blue-600 dark:text-blue-400 font-semibold bg-blue-50/50 dark:bg-blue-900/20' 
-                  : 'text-slate-700 dark:text-slate-300'}
+                ${
+                  currentLanguage === lang.code
+                    ? 'text-blue-600 dark:text-blue-400 font-semibold bg-blue-50/50 dark:bg-blue-900/20'
+                    : 'text-slate-700 dark:text-slate-300'
+                }
               `}
             >
-              <img 
-                src={`https://flagcdn.com/w40/${lang.flag}.png`} 
-                alt="" 
+              <img
+                src={`https://flagcdn.com/w40/${lang.flag}.png`}
+                alt=""
                 className="w-5 h-4 object-cover rounded-sm shadow-sm"
               />
               <span>{lang.name}</span>

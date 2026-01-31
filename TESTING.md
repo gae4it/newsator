@@ -7,10 +7,11 @@ To test the app locally with Netlify Functions:
 1. **Stop the current dev server** (Ctrl+C in the terminal running `npm run dev`)
 
 2. **Run with Netlify Dev:**
+
    ```bash
    npm run dev:netlify
    ```
-   
+
    This will:
    - Start Vite dev server on port 3000
    - Start Netlify Functions on `/.netlify/functions/*`
@@ -34,11 +35,13 @@ To test the app locally with Netlify Functions:
 ## What Changed
 
 ### Before (Insecure):
+
 - API key was in `vite.config.ts` → exposed to client
 - Direct calls to Gemini API from browser
 - Anyone could steal the API key
 
 ### After (Secure):
+
 - API key only in `.env.local` (server-side)
 - Client calls `/.netlify/functions/fetch-news`
 - Netlify Function calls Gemini API server-side
@@ -49,6 +52,7 @@ To test the app locally with Netlify Functions:
 When ready to deploy:
 
 1. **Push to GitHub:**
+
    ```bash
    git add .
    git commit -m "Add Netlify Functions for API security"
@@ -65,6 +69,7 @@ When ready to deploy:
 ## Troubleshooting
 
 If you get errors:
+
 - Make sure `.env.local` has `GEMINI_API_KEY=your_key`
 - Check terminal for Netlify Function logs
 - Verify the function is at `netlify/functions/fetch-news.ts`

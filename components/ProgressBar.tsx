@@ -11,6 +11,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ isLoading }) => {
     let interval: NodeJS.Timeout;
 
     if (isLoading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProgress(0);
       // Simulate progress: fast at first, then slows down
       interval = setInterval(() => {
@@ -45,7 +46,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ isLoading }) => {
         style={{ width: `${progress}%` }}
       />
       {/* Glow effect */}
-      <div 
+      <div
         className="absolute top-0 bottom-0 right-0 w-8 bg-white/30 blur-sm animate-pulse"
         style={{ left: `calc(${progress}% - 2rem)` }}
       />

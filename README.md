@@ -25,29 +25,37 @@ Real-time news aggregator powered by Google Gemini with Google Search Grounding.
 ## 📦 Setup
 
 ### 1. Install dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Configure API Key
+
 Create a `.env.local` file in the root directory:
+
 ```env
 GEMINI_API_KEY=your_api_key_here
 ```
+
 Get your key from [Google AI Studio](https://aistudio.google.com/app/apikey).
 
 ### 3. Run development server
 
 **Option A: Standard Vite dev server** (without Netlify Functions)
+
 ```bash
 npm run dev
 ```
+
 ⚠️ This won't work for API calls. Use Option B for full functionality.
 
 **Option B: Netlify Dev server** (recommended, with Functions)
+
 ```bash
 npm run dev:netlify
 ```
+
 This runs the app with Netlify Functions enabled.
 
 Open the URL shown in terminal (usually `http://localhost:8888`)
@@ -66,6 +74,7 @@ Open the URL shown in terminal (usually `http://localhost:8888`)
 ### Deploy to Netlify
 
 1. **Push to GitHub:**
+
    ```bash
    git add .
    git commit -m "Ready for production"
