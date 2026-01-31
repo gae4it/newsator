@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Region, NewsCategory, NewsTopic, NewsPoint, ViewMode, AIModel, Language } from './types';
+import { Region, NewsCategory, NewsTopic, NewsPoint, ViewMode, AIModel, Language, AppMode, PromptType } from './types';
 import { fetchNewsSummary } from './services/geminiService';
 import { RegionSelector } from './components/RegionSelector';
 import { CategorySelector } from './components/CategorySelector';
@@ -13,6 +13,9 @@ import { LoadingSkeleton } from './components/LoadingSkeleton';
 import { OverviewSkeleton } from './components/OverviewSkeleton';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ProgressBar } from './components/ProgressBar';
+import { PromptCopyButton } from './components/PromptCopyButton';
+import { AppModeSelector } from './components/AppModeSelector';
+import { PromptTypeSelector } from './components/PromptTypeSelector';
 
 const App: React.FC = () => {
   const [selectedRegion, setSelectedRegion] = useState<Region>(Region.WORLD); // Default to World
@@ -26,6 +29,8 @@ const App: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<AIModel>(AIModel.GEMINI_1_5);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(Language.EN);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [appMode, setAppMode] = useState<AppMode>(AppMode.READ);
+  const [selectedPromptType, setSelectedPromptType] = useState<PromptType>(PromptType.EXTENDED);
 
   // PWA Install Prompt Listener
   useEffect(() => {
@@ -97,6 +102,14 @@ const App: React.FC = () => {
     if (category === selectedCategory && currentNews) return;
 
     setSelectedCategory(category);
+    
+    // Only fetch news if in READ mode
+    if (appMode !== AppMode.READ) {
+      setCurrentNews(null);
+      setError(null);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setCurrentNews(null);
@@ -263,25 +276,55 @@ const App: React.FC = () => {
       />
 
       {/* Selectors Bar - Always visible under filters */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 my-6 px-4">
-        <ModeSelector 
-          selectedMode={viewMode} 
-          onSelect={handleModeChange} 
-          disabled={isLoading} 
+      <div className="flex flex-col items-center justify-center gap-4 my-6 px-4">
+        <AppModeSelector 
+          selectedMode={appMode}
+          onSelect={setAppMode}
+          disabled={isLoading}
         />
-        <ModelSelector 
-          selectedModel={selectedModel} 
-          onSelect={handleModelChange} 
-          disabled={isLoading} 
-        />
+        
+        {appMode === AppMode.READ && (
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+            <ModeSelector 
+              selectedMode={viewMode} 
+              onSelect={handleModeChange} 
+              disabled={isLoading} 
+            />
+            <ModelSelector 
+              selectedModel={selectedModel} 
+              onSelect={handleModelChange} 
+              disabled={isLoading} 
+            />
+          </div>
+        )}
+
+        {appMode === AppMode.PROMPT && selectedCategory && (
+          <div className="w-full">
+            <PromptTypeSelector 
+              selectedType={selectedPromptType}
+              onSelect={setSelectedPromptType}
+            />
+          </div>
+        )}
       </div>
 
       <ProgressBar isLoading={isLoading} />
 
-      {/* Main Content - News Feed */}
       <main className="max-w-4xl mx-auto px-4 py-6">
+        {/* Prompt Mode Components */}
+        {appMode === AppMode.PROMPT && selectedCategory && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <PromptCopyButton 
+              region={selectedRegion}
+              category={selectedCategory}
+              language={selectedLanguage}
+              promptType={selectedPromptType}
+            />
+          </div>
+        )}
+
         {/* No category selected */}
-        {!selectedCategory && !isLoading && (
+        {appMode === AppMode.READ && !selectedCategory && !isLoading && (
           <div className="flex flex-col items-center justify-center py-20 opacity-60">
             <div className="inline-block p-6 rounded-full bg-slate-200 dark:bg-slate-800 mb-4">
               <span className="text-4xl">📰</span>

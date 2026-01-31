@@ -22,7 +22,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({ selectedMode, onSele
           `}
         >
           <span className="flex items-center gap-2">
-            <span>📝</span> Summary
+            <span>📝</span> Detailed Report
           </span>
         </button>
         <button
@@ -37,7 +37,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({ selectedMode, onSele
           `}
         >
           <span className="flex items-center gap-2">
-            <span>⚡</span> Overview
+            <span>⚡</span> Headlines Only
           </span>
         </button>
       </div>

@@ -14,8 +14,18 @@ export enum Region {
 }
 
 export enum ViewMode {
-  SUMMARY = 'Summary',
-  OVERVIEW = 'Overview'
+  SUMMARY = 'Detailed Report',
+  OVERVIEW = 'Headlines Only'
+}
+
+export enum AppMode {
+  PROMPT = 'Prompt Mode',
+  READ = 'Read Mode'
+}
+
+export enum PromptType {
+  EXTENDED = 'Detailed Report',
+  TITLES = 'Headlines Only'
 }
 
 export enum AIModel {
@@ -40,6 +50,7 @@ export enum NewsCategory {
   BUSINESS = 'Business & Industry',
   TECHNOLOGY = 'Technology',
   WORLD = 'World',
+  SOCIAL_TRENDS = 'Social Media',
   CLIMATE = 'Climate & Environment',
   HEALTH = 'Health',
   CULTURE = 'Culture',

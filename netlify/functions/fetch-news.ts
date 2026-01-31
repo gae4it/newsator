@@ -65,7 +65,7 @@ export const handler: Handler = async (
 
   try {
     const body = JSON.parse(event.body || "{}");
-    const { region, category, mode = "Summary", model = "Gemini 1.5", excludeTitles = [], language = "English" } = body;
+    const { region, category, mode = "Detailed Report", model = "Gemini 1.5", excludeTitles = [], language = "English" } = body;
 
     if (!region || !category) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: "Missing region or category" }) };
@@ -85,7 +85,7 @@ export const handler: Handler = async (
     // Limit excludeTitles to avoid prompt bloat
     const limitedExcludeTitles = excludeTitles.slice(-20);
 
-    const isOverview = mode === "Overview";
+    const isOverview = mode === "Headlines Only";
     const itemCount = 10;
     let finalData;
 
