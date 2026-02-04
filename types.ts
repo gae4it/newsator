@@ -19,6 +19,7 @@ export enum ViewMode {
 }
 
 export enum AppMode {
+  RSS = 'RSS Mode',
   PROMPT = 'Prompt Mode',
   READ = 'Read Mode',
 }
@@ -76,4 +77,19 @@ export interface NewsResponse {
 export interface CacheEntry {
   data: NewsResponse;
   timestamp: number;
+}
+
+// RSS Mode Types
+export interface Newspaper {
+  id: string;
+  name: string;
+  url: string;
+  rssUrl?: string;
+  country: string;
+  flag: string;
+}
+
+export interface RSSHeadline {
+  title: string;
+  link?: string;
 }

@@ -8,6 +8,8 @@ import {
   Language,
   AppMode,
   PromptType,
+  Newspaper,
+  RSSHeadline,
 } from './types';
 import { fetchNewsSummary } from './services/geminiService';
 import { RegionSelector } from './components/RegionSelector';
@@ -25,6 +27,9 @@ import { ProgressBar } from './components/ProgressBar';
 import { PromptCopyButton } from './components/PromptCopyButton';
 import { AppModeSelector } from './components/AppModeSelector';
 import { PromptTypeSelector } from './components/PromptTypeSelector';
+import { NewspaperSelector } from './components/NewspaperSelector';
+import { RSSHeadlinesList } from './components/RSSHeadlinesList';
+import { NEWSPAPERS } from './newspapers';
 
 const App: React.FC = () => {
   const [selectedRegion, setSelectedRegion] = useState<Region>(Region.WORLD); // Default to World
@@ -42,8 +47,13 @@ const App: React.FC = () => {
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [appMode, setAppMode] = useState<AppMode>(AppMode.READ);
+  const [appMode, setAppMode] = useState<AppMode>(AppMode.RSS);
   const [selectedPromptType, setSelectedPromptType] = useState<PromptType>(PromptType.EXTENDED);
+
+  // RSS Mode state
+  const [selectedNewspaper, setSelectedNewspaper] = useState<Newspaper | null>(null);
+  const [rssHeadlines, setRssHeadlines] = useState<RSSHeadline[]>([]);
+  const [isLoadingRSS, setIsLoadingRSS] = useState<boolean>(false);
 
   // PWA Install Prompt Listener
   useEffect(() => {
@@ -324,25 +334,59 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Region Selector - Circular Avatars */}
-      <RegionSelector
-        selectedRegion={selectedRegion}
-        onSelect={handleRegionSelect}
-        disabled={isLoading}
-      />
+      {/* App Mode Selector */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-4 transition-colors duration-300">
+        <div className="max-w-6xl mx-auto flex justify-center">
+          <AppModeSelector
+            selectedMode={appMode}
+            onSelect={setAppMode}
+            disabled={isLoading || isLoadingRSS}
+          />
+        </div>
+      </div>
 
-      {/* Category Selector - Horizontal Chips */}
-      <CategorySelector
-        selectedCategory={selectedCategory}
-        onSelect={handleCategorySelect}
-        disabled={isLoading}
-      />
+      {/* RSS Mode: Newspaper Selector */}
+      {appMode === AppMode.RSS && (
+        <NewspaperSelector
+          newspapers={NEWSPAPERS}
+          selectedNewspaper={selectedNewspaper}
+          onSelect={(newspaper) => {
+            setSelectedNewspaper(newspaper);
+            setIsLoadingRSS(true);
+            // Mock RSS fetch - replace with actual implementation
+            setTimeout(() => {
+              const mockHeadlines: RSSHeadline[] = Array.from({ length: 50 }, (_, i) => ({
+                title: `${newspaper.name} - Headline ${i + 1}: Breaking news story about current events`,
+              }));
+              setRssHeadlines(mockHeadlines);
+              setIsLoadingRSS(false);
+            }, 1000);
+          }}
+          disabled={isLoadingRSS}
+        />
+      )}
 
-      {/* Selectors Bar - Always visible under filters */}
-      <div className="flex flex-col items-center justify-center gap-4 my-6 px-4">
-        <AppModeSelector selectedMode={appMode} onSelect={setAppMode} disabled={isLoading} />
+      {/* Read/Prompt Mode: Region Selector - Circular Avatars */}
+      {appMode !== AppMode.RSS && (
+        <>
+          <RegionSelector
+            selectedRegion={selectedRegion}
+            onSelect={handleRegionSelect}
+            disabled={isLoading}
+          />
 
-        {appMode === AppMode.READ && (
+          {/* Category Selector - Horizontal Chips */}
+          <CategorySelector
+            selectedCategory={selectedCategory}
+            onSelect={handleCategorySelect}
+            disabled={isLoading}
+          />
+        </>
+      )}
+
+      {/* Selectors Bar - Conditional based on mode */}
+      {appMode === AppMode.READ && (
+        <div className="flex flex-col items-center justify-center gap-4 my-6 px-4">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
             <ModeSelector
               selectedMode={viewMode}
@@ -355,21 +399,50 @@ const App: React.FC = () => {
               disabled={isLoading}
             />
           </div>
-        )}
+        </div>
+      )}
 
-        {appMode === AppMode.PROMPT && selectedCategory && (
+      {appMode === AppMode.PROMPT && selectedCategory && (
+        <div className="flex flex-col items-center justify-center gap-4 my-6 px-4">
           <div className="w-full">
             <PromptTypeSelector
               selectedType={selectedPromptType}
               onSelect={setSelectedPromptType}
             />
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <ProgressBar isLoading={isLoading} />
 
       <main className="max-w-4xl mx-auto px-4 py-6">
+        {/* RSS Mode Components */}
+        {appMode === AppMode.RSS && (
+          <>
+            {!selectedNewspaper && !isLoadingRSS && (
+              <div className="flex flex-col items-center justify-center py-20 opacity-60">
+                <div className="inline-block p-6 rounded-full bg-slate-200 dark:bg-slate-800 mb-4">
+                  <span className="text-4xl">📡</span>
+                </div>
+                <h2 className="text-xl font-medium text-slate-700 dark:text-slate-300">
+                  Select a newspaper
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                  Choose from the newspapers above to view headlines
+                </p>
+              </div>
+            )}
+
+            {selectedNewspaper && (
+              <RSSHeadlinesList
+                headlines={rssHeadlines}
+                newspaperName={selectedNewspaper.name}
+                isLoading={isLoadingRSS}
+              />
+            )}
+          </>
+        )}
+
         {/* Prompt Mode Components */}
         {appMode === AppMode.PROMPT && selectedCategory && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
