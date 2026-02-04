@@ -9,14 +9,18 @@ const RSS_FUNCTION_URL =
  * Fetches RSS headlines from a given RSS feed URL
  * Uses Netlify Function to avoid CORS issues
  */
-export async function fetchRSSHeadlines(rssUrl: string): Promise<RSSHeadline[]> {
+export async function fetchRSSHeadlines(
+  rssUrl: string,
+  fetchingMethod: 'rss' | 'scraping' = 'rss',
+  selectors?: string[]
+): Promise<RSSHeadline[]> {
   try {
     const response = await fetch(RSS_FUNCTION_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ rssUrl }),
+      body: JSON.stringify({ rssUrl, fetchingMethod, selectors }),
     });
 
     if (!response.ok) {

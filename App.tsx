@@ -290,7 +290,11 @@ const App: React.FC = () => {
 
     try {
       if (newspaper.rssUrl) {
-        const headlines = await fetchRSSHeadlines(newspaper.rssUrl);
+        const headlines = await fetchRSSHeadlines(
+          newspaper.rssUrl,
+          newspaper.fetchingMethod,
+          newspaper.selectors
+        );
         setRssHeadlines(headlines);
       } else {
         setRssError('No RSS feed available for this newspaper');

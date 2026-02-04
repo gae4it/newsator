@@ -88,6 +88,8 @@ export interface Newspaper {
   country: string;
   flag: string;
   description?: string;
+  fetchingMethod?: 'rss' | 'scraping';
+  selectors?: string[];
 }
 
 export interface RSSHeadline {

@@ -32,6 +32,8 @@ export const NewspaperSelector: React.FC<NewspaperSelectorProps> = ({
     US: 'United States',
     EU: 'Europe',
     AGG: 'News Aggregators',
+    MUSIC: 'Musica',
+    ECONOMY: 'Economia e finanze',
   };
 
   return (
