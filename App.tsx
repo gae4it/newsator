@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Region,
   NewsCategory,
@@ -50,6 +50,9 @@ const App: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [appMode, setAppMode] = useState<AppMode>(AppMode.RSS);
   const [selectedPromptType, setSelectedPromptType] = useState<PromptType>(PromptType.EXTENDED);
+
+  // References for scrolling
+  const headlinesRef = useRef<HTMLDivElement>(null);
 
   // RSS Mode state
   const [selectedNewspaper, setSelectedNewspaper] = useState<Newspaper | null>(null);
@@ -288,6 +291,11 @@ const App: React.FC = () => {
     setRssHeadlines([]);
     setRssError(null);
 
+    // Scroll to headlines container
+    setTimeout(() => {
+      headlinesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+
     try {
       if (newspaper.rssUrl) {
         const headlines = await fetchRSSHeadlines(
@@ -434,7 +442,7 @@ const App: React.FC = () => {
       <main className="max-w-4xl mx-auto px-4 py-6">
         {/* RSS Mode Components */}
         {appMode === AppMode.RSS && (
-          <>
+          <div ref={headlinesRef}>
             {!selectedNewspaper && !isLoadingRSS && (
               <div className="flex flex-col items-center justify-center py-20 opacity-60">
                 <div className="inline-block p-6 rounded-full bg-slate-200 dark:bg-slate-800 mb-4">
@@ -476,7 +484,7 @@ const App: React.FC = () => {
                 isLoading={isLoadingRSS}
               />
             )}
-          </>
+          </div>
         )}
 
         {/* Prompt Mode Components */}
