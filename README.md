@@ -1,17 +1,30 @@
 # Newsator AI
 
-Real-time news aggregator powered by Google Gemini with Google Search Grounding.
+Real-time news aggregator powered by Google Gemini with Google Search Grounding and RSS feeds.
 
 ## 🚀 Features
+
+### 📡 RSS Mode (Default)
+
+- **18 newspapers** from Italy 🇮🇹, Germany 🇩🇪, USA 🇺🇸, and Europe 🇪🇺
+- **Real RSS feeds** with up to 50 headlines per newspaper
+- **Instant access** - No AI processing required
+- **Google search integration** - Click any headline to search
+
+### 🤖 AI-Powered Modes
 
 - 🌍 **Multi-region news** (World, Europe, Germany, Italy, Spain, Switzerland)
 - 🔍 **Real-time news** via Google Search Grounding
 - 🤖 **AI-powered summaries** using Gemini 2.5 Flash
+- ✨ **Prompt Mode** - Generate custom AI prompts
+- 📖 **Read Mode** - AI-summarized news with detailed reports
+
+### 🎨 User Experience
+
 - 🌓 **Dark mode** support
-- ⚡ **Smart caching** (30 minutes)
+- ⚡ **Smart caching** (30 minutes for both RSS and AI)
 - 📱 **Responsive design**
-- 🔒 **Secure API** with Netlify Functions
-- 🚫 **Privacy-focused** (No cookies, no tracking, noindex/nofollow)
+- 🔒 **Privacy-focused** (No cookies, no tracking, noindex/nofollow)
 
 ## 🛠️ Tech Stack
 
@@ -19,7 +32,8 @@ Real-time news aggregator powered by Google Gemini with Google Search Grounding.
 - **Vite** (Build tool)
 - **Tailwind CSS v3**
 - **Google Gemini 2.5 Flash** (with Search Grounding)
-- **Netlify Functions** (Serverless API)
+- **RSS Parser** (for RSS feeds)
+- **Netlify Functions** (Serverless API for both AI and RSS)
 - **ESLint** + **Prettier**
 
 ## 📦 Setup

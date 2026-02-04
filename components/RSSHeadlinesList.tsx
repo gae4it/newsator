@@ -4,12 +4,16 @@ import { RSSHeadline } from '../types';
 interface RSSHeadlinesListProps {
   headlines: RSSHeadline[];
   newspaperName: string;
+  flag: string;
+  description?: string;
   isLoading: boolean;
 }
 
 export const RSSHeadlinesList: React.FC<RSSHeadlinesListProps> = ({
   headlines,
   newspaperName,
+  flag,
+  description,
   isLoading,
 }) => {
   const handleHeadlineClick = (title: string) => {
@@ -27,7 +31,10 @@ export const RSSHeadlinesList: React.FC<RSSHeadlinesListProps> = ({
               <div className="flex flex-col items-center gap-4">
                 <div className="w-12 h-12 border-4 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
                 <p className="text-slate-600 dark:text-slate-400 font-medium">
-                  Loading headlines from {newspaperName}...
+                  Loading headlines from {flag} {newspaperName}
+                  {description && (
+                    <span className="block text-xs opacity-70 mt-1">{description}</span>
+                  )}
                 </p>
               </div>
             </div>
@@ -49,8 +56,11 @@ export const RSSHeadlinesList: React.FC<RSSHeadlinesListProps> = ({
               <h2 className="text-xl font-medium text-slate-700 dark:text-slate-300">
                 No headlines available
               </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-                Unable to fetch headlines from {newspaperName}
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 text-center">
+                Unable to fetch headlines from {flag} {newspaperName}
+                {description && (
+                  <span className="block text-xs opacity-70 mt-1">{description}</span>
+                )}
               </p>
             </div>
           </div>
@@ -62,13 +72,18 @@ export const RSSHeadlinesList: React.FC<RSSHeadlinesListProps> = ({
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
       <div className="mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-          <span>📰</span>
-          <span>{newspaperName}</span>
-          <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
-            ({headlines.length} headlines)
-          </span>
-        </h2>
+        <div className="flex flex-col">
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+            <span>{flag}</span>
+            <span>{newspaperName}</span>
+            <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
+              ({headlines.length} headlines)
+            </span>
+          </h2>
+          {description && (
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 ml-7">{description}</p>
+          )}
+        </div>
       </div>
 
       <div className="bg-white dark:bg-slate-900/50 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">

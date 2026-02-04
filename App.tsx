@@ -12,6 +12,7 @@ import {
   RSSHeadline,
 } from './types';
 import { fetchNewsSummary } from './services/geminiService';
+import { fetchRSSHeadlines } from './services/rssService';
 import { RegionSelector } from './components/RegionSelector';
 import { CategorySelector } from './components/CategorySelector';
 import { NewsCardFeed } from './components/NewsCardFeed';
@@ -54,6 +55,7 @@ const App: React.FC = () => {
   const [selectedNewspaper, setSelectedNewspaper] = useState<Newspaper | null>(null);
   const [rssHeadlines, setRssHeadlines] = useState<RSSHeadline[]>([]);
   const [isLoadingRSS, setIsLoadingRSS] = useState<boolean>(false);
+  const [rssError, setRssError] = useState<string | null>(null);
 
   // PWA Install Prompt Listener
   useEffect(() => {
@@ -259,8 +261,8 @@ const App: React.FC = () => {
   const handleRefresh = useCallback(async () => {
     if (!selectedCategory || isLoading) return;
 
-    setIsLoading(true);
-    setError(null);
+    setIsLoadingRSS(true);
+    setRssError(null);
 
     try {
       const data = await fetchNewsSummary(
@@ -276,9 +278,30 @@ const App: React.FC = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
-      setIsLoading(false);
+      setIsLoadingRSS(false);
     }
   }, [selectedRegion, selectedCategory, viewMode, selectedModel, selectedLanguage]);
+
+  const handleRSSFetch = useCallback(async (newspaper: Newspaper) => {
+    setSelectedNewspaper(newspaper);
+    setIsLoadingRSS(true);
+    setRssHeadlines([]);
+    setRssError(null);
+
+    try {
+      if (newspaper.rssUrl) {
+        const headlines = await fetchRSSHeadlines(newspaper.rssUrl);
+        setRssHeadlines(headlines);
+      } else {
+        setRssError('No RSS feed available for this newspaper');
+      }
+    } catch (err) {
+      console.error('Failed to fetch RSS:', err);
+      setRssError(err instanceof Error ? err.message : 'Failed to fetch headlines');
+    } finally {
+      setIsLoadingRSS(false);
+    }
+  }, []);
 
   // Handle language change auto-refresh
   useEffect(() => {
@@ -350,18 +373,7 @@ const App: React.FC = () => {
         <NewspaperSelector
           newspapers={NEWSPAPERS}
           selectedNewspaper={selectedNewspaper}
-          onSelect={(newspaper) => {
-            setSelectedNewspaper(newspaper);
-            setIsLoadingRSS(true);
-            // Mock RSS fetch - replace with actual implementation
-            setTimeout(() => {
-              const mockHeadlines: RSSHeadline[] = Array.from({ length: 50 }, (_, i) => ({
-                title: `${newspaper.name} - Headline ${i + 1}: Breaking news story about current events`,
-              }));
-              setRssHeadlines(mockHeadlines);
-              setIsLoadingRSS(false);
-            }, 1000);
-          }}
+          onSelect={handleRSSFetch}
           disabled={isLoadingRSS}
         />
       )}
@@ -433,10 +445,30 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {selectedNewspaper && (
+            {/* Error State */}
+            {rssError && selectedNewspaper && (
+              <div className="flex items-center justify-center py-12 px-4">
+                <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 p-6 rounded-2xl max-w-lg w-full border border-red-100 dark:border-red-900 shadow-sm">
+                  <p className="font-semibold mb-2 flex items-center gap-2">
+                    <span>⚠️</span> Unable to fetch headlines
+                  </p>
+                  <p className="text-sm mb-4 opacity-90 leading-relaxed">{rssError}</p>
+                  <button
+                    onClick={() => selectedNewspaper && handleRSSFetch(selectedNewspaper)}
+                    className="px-4 py-2 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-md text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors shadow-sm"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {selectedNewspaper && !rssError && (
               <RSSHeadlinesList
                 headlines={rssHeadlines}
                 newspaperName={selectedNewspaper.name}
+                flag={selectedNewspaper.flag}
+                description={selectedNewspaper.description}
                 isLoading={isLoadingRSS}
               />
             )}

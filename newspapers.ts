@@ -5,6 +5,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'televideo',
     name: 'Televideo RAI',
+    description: "Italy's national broadcaster",
     url: 'https://www.servizitelevideo.rai.it/televideo/pub/index.jsp',
     rssUrl: 'https://www.servizitelevideo.rai.it/televideo/pub/rss102.xml',
     country: 'IT',
@@ -13,6 +14,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'il-fatto',
     name: 'Il Fatto Quotidiano',
+    description: 'Independent daily newspaper',
     url: 'https://www.ilfattoquotidiano.it/',
     rssUrl: 'https://www.ilfattoquotidiano.it/feed/',
     country: 'IT',
@@ -21,6 +23,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'repubblica',
     name: 'Repubblica',
+    description: 'Major Italian newspaper',
     url: 'https://www.repubblica.it/',
     rssUrl: 'https://www.repubblica.it/rss/homepage/rss2.0.xml',
     country: 'IT',
@@ -29,6 +32,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'ansa',
     name: 'ANSA',
+    description: 'Italian news agency',
     url: 'https://www.ansa.it/',
     rssUrl: 'https://www.ansa.it/sito/ansait_rss.xml',
     country: 'IT',
@@ -37,6 +41,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'il-sole-24-ore',
     name: 'Il Sole 24 Ore',
+    description: 'Financial and business news',
     url: 'https://www.ilsole24ore.com/',
     rssUrl: 'https://www.ilsole24ore.com/rss/mondo--europa.xml',
     country: 'IT',
@@ -45,6 +50,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'sky-tg24',
     name: 'SkyTg24',
+    description: "Sky Italia's news channel",
     url: 'https://tg24.sky.it/',
     rssUrl: 'https://tg24.sky.it/rss/home.xml',
     country: 'IT',
@@ -53,6 +59,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'internazionale',
     name: 'Internazionale',
+    description: 'International magazine',
     url: 'https://www.internazionale.it/',
     rssUrl: 'https://www.internazionale.it/sitemaps/rss.xml',
     country: 'IT',
@@ -63,6 +70,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'dw',
     name: 'Deutsche Welle',
+    description: "Germany's international broadcaster",
     url: 'https://www.dw.com/',
     rssUrl: 'https://rss.dw.com/xml/rss-de-all',
     country: 'DE',
@@ -71,6 +79,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'tagesschau',
     name: 'Tagesschau',
+    description: "ARD's news service",
     url: 'https://www.tagesschau.de/',
     rssUrl: 'https://www.tagesschau.de/inland/index~rss2.xml',
     country: 'DE',
@@ -79,6 +88,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'sueddeutsche',
     name: 'Süddeutsche Zeitung',
+    description: 'Leading German newspaper',
     url: 'https://www.sueddeutsche.de/',
     rssUrl: 'https://rss.sueddeutsche.de/rss/Topthemen',
     country: 'DE',
@@ -87,6 +97,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'faz',
     name: 'Frankfurter Allgemeine',
+    description: 'Conservative German newspaper',
     url: 'https://www.faz.net/',
     rssUrl: 'https://www.faz.net/rss/aktuell',
     country: 'DE',
@@ -95,6 +106,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'spiegel',
     name: 'Der Spiegel',
+    description: 'German news magazine',
     url: 'https://www.spiegel.de/',
     rssUrl: 'https://www.spiegel.de/schlagzeilen/tops/index.rss',
     country: 'DE',
@@ -105,6 +117,7 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'reuters',
     name: 'Reuters',
+    description: 'International news agency',
     url: 'https://www.reuters.com/',
     rssUrl: 'https://www.reuters.com/rssfeed/worldNews',
     country: 'US',
@@ -113,8 +126,27 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'nytimes',
     name: 'New York Times',
+    description: 'World section',
     url: 'https://www.nytimes.com/',
     rssUrl: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
+    country: 'US',
+    flag: '🇺🇸',
+  },
+  {
+    id: '68k-news-usa',
+    name: '68k News USA',
+    description: 'Technology focus',
+    url: 'http://68k.news/index.php?section=nation&loc=US',
+    rssUrl: 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en',
+    country: 'US',
+    flag: '🇺🇸',
+  },
+  {
+    id: '68k-news-global',
+    name: '68k News Global',
+    description: 'International technology',
+    url: 'http://68k.news/index.php?section=top&loc=US',
+    rssUrl: 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en',
     country: 'US',
     flag: '🇺🇸',
   },
@@ -123,9 +155,39 @@ export const NEWSPAPERS: Newspaper[] = [
   {
     id: 'euronews',
     name: 'EuroNews',
+    description: 'Pan-European news network',
     url: 'https://www.euronews.com/',
     rssUrl: 'https://www.euronews.com/rss?format=mrss&level=vertical&name=my-europe',
     country: 'EU',
     flag: '🇪🇺',
+  },
+
+  // News Aggregators
+  {
+    id: 'agg-68k-it',
+    name: '68k News Italy',
+    description: 'Italian technology news',
+    url: 'http://68k.news/index.php?section=nation&loc=IT',
+    rssUrl: 'https://news.google.com/rss?hl=it&gl=IT&ceid=IT:it',
+    country: 'AGG',
+    flag: '🤖',
+  },
+  {
+    id: 'agg-68k-de',
+    name: '68k News Germany',
+    description: 'German technology news',
+    url: 'http://68k.news/index.php?section=nation&loc=DE',
+    rssUrl: 'https://news.google.com/rss?hl=de&gl=DE&ceid=DE:de',
+    country: 'AGG',
+    flag: '🤖',
+  },
+  {
+    id: 'agg-68k-us',
+    name: '68k News USA',
+    description: 'American technology news',
+    url: 'http://68k.news/index.php?section=nation&loc=US',
+    rssUrl: 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en',
+    country: 'AGG',
+    flag: '🤖',
   },
 ];

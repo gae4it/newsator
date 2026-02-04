@@ -31,6 +31,7 @@ export const NewspaperSelector: React.FC<NewspaperSelectorProps> = ({
     DE: 'Germany',
     US: 'United States',
     EU: 'Europe',
+    AGG: 'News Aggregators',
   };
 
   return (
@@ -45,7 +46,7 @@ export const NewspaperSelector: React.FC<NewspaperSelectorProps> = ({
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
               {countryNames[country] || country}
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {papers.map((newspaper) => {
                 const isSelected = selectedNewspaper?.id === newspaper.id;
                 return (
@@ -54,17 +55,28 @@ export const NewspaperSelector: React.FC<NewspaperSelectorProps> = ({
                     onClick={() => onSelect(newspaper)}
                     disabled={disabled}
                     className={`
-                      flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+                      flex items-start gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-left
                       ${
                         isSelected
                           ? 'bg-blue-500 text-white shadow-md ring-2 ring-blue-300 dark:ring-blue-700'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                       }
-                      ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
+                      ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02]'}
                     `}
                   >
-                    <span className="text-lg">{newspaper.flag}</span>
-                    <span className="truncate text-left flex-1">{newspaper.name}</span>
+                    <span className="text-2xl mt-0.5">{newspaper.flag}</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold truncate">{newspaper.name}</span>
+                      {newspaper.description && (
+                        <span
+                          className={`text-[10px] truncate opacity-80 font-normal mt-0.5 ${
+                            isSelected ? 'text-blue-50' : 'text-slate-500 dark:text-slate-400'
+                          }`}
+                        >
+                          {newspaper.description}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 );
               })}

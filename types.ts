@@ -87,6 +87,7 @@ export interface Newspaper {
   rssUrl?: string;
   country: string;
   flag: string;
+  description?: string;
 }
 
 export interface RSSHeadline {
