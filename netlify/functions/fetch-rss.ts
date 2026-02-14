@@ -44,7 +44,8 @@ export const handler: Handler = async (event) => {
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           Accept:
             'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-          'Accept-Language': 'en-US,en;q=0.9,it;q=0.8',
+          'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7,it;q=0.6',
+          'Accept-Charset': 'utf-8, iso-8859-1;q=0.5',
           'Cache-Control': 'no-cache',
           Pragma: 'no-cache',
           'Upgrade-Insecure-Requests': '1',
@@ -56,7 +57,10 @@ export const handler: Handler = async (event) => {
         throw new Error(`Failed to fetch HTML: ${response.status} ${response.statusText}`);
       }
 
-      const html = await response.text();
+      // Get the response as an ArrayBuffer and decode it properly as UTF-8
+      const buffer = await response.arrayBuffer();
+      const decoder = new TextDecoder('utf-8');
+      const html = decoder.decode(buffer);
       const $ = cheerio.load(html);
 
       const titleSet = new Set<string>();
