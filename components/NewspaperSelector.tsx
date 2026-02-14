@@ -33,7 +33,7 @@ export const NewspaperSelector: React.FC<NewspaperSelectorProps> = ({
     EU: '🇪🇺 Europe',
     AGG: '🤖 News Aggregators',
     MUSIC: '🎸 Musica',
-    ECONOMY: '📈 Economia e finanze',
+    ECONOMY: '📈 Economia e finanze (Italy)',
   };
 
   return (
