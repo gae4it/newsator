@@ -42,7 +42,7 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.SUMMARY);
-  const [selectedModel, setSelectedModel] = useState<AIModel>(AIModel.GEMINI_2_0);
+  const [selectedModel, setSelectedModel] = useState<AIModel>(AIModel.GEMINI_FREE);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem('language');
     return (saved as Language) || Language.EN;

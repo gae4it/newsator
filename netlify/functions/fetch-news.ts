@@ -100,9 +100,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
       }
     }
 
-    // Limit excludeTitles to avoid prompt bloat
-    const limitedExcludeTitles = excludeTitles.slice(-20);
-
+    // AI LOGIC
     const itemCount = 10;
     let finalData;
 
@@ -162,50 +160,79 @@ export const handler: Handler = async (event: HandlerEvent) => {
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) throw new Error('GEMINI_API_KEY not found');
 
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const geminiModelId = 'gemini-2.0-flash'; // Stable model
+      try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const geminiModelId = 'gemini-2.5-flash-lite'; // Best free tier in 2026: 500 RPD
 
-      const genModel = genAI.getGenerativeModel({
-        model: geminiModelId,
-        systemInstruction: `You are a professional news editor. Output strictly valid JSON. Language: ${language}.`,
-        generationConfig: {
-          responseMimeType: 'application/json',
-        },
-      });
+        const genModel = genAI.getGenerativeModel({
+          model: geminiModelId,
+          systemInstruction: `You are a professional news editor. Output strictly valid JSON. Language: ${language}.`,
+          generationConfig: {
+            responseMimeType: 'application/json',
+          },
+        });
 
-      const result = await genModel.generateContent({
-        contents: [{ role: 'user', parts: [{ text: aiPrompt }] }],
-      });
+        const result = await genModel.generateContent({
+          contents: [{ role: 'user', parts: [{ text: aiPrompt }] }],
+        });
 
-      finalData = parseJSONResponse(result.response.text(), cacheKey);
+        finalData = parseJSONResponse(result.response.text(), cacheKey);
+      } catch (aiError: any) {
+        console.warn('Gemini failed, falling back to raw RSS:', aiError.message);
+        // FALLBACK: Return raw RSS data formatted as AI response if quota is hit
+        if (aiError.message?.includes('429') || aiError.message?.includes('quota')) {
+          finalData = {
+            points: realNewsItems.map((item) => ({
+              title: item.title || 'News Update',
+              summary: 'Click to read the full story from the source.',
+              sourceName: 'RSS Feed',
+              sourceUrl: item.link || '#',
+            })),
+          };
+        } else {
+          throw aiError;
+        }
+      }
     } else {
       // OpenRouter Logic
       const orApiKey = process.env.OPENROUTER_API_KEY;
       if (!orApiKey) throw new Error('OPENROUTER_API_KEY not found');
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${orApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model:
-            model === 'Mistral'
-              ? 'mistralai/mistral-7b-instruct'
-              : 'meta-llama/llama-3.1-8b-instruct',
-          messages: [
-            { role: 'system', content: 'Professional news editor. Output JSON only.' },
-            { role: 'user', content: aiPrompt },
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.1,
-        }),
-      });
+      try {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${orApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model:
+              model === 'Mistral'
+                ? 'mistralai/mistral-7b-instruct'
+                : 'meta-llama/llama-3.1-8b-instruct',
+            messages: [
+              { role: 'system', content: 'Professional news editor. Output JSON only.' },
+              { role: 'user', content: aiPrompt },
+            ],
+            response_format: { type: 'json_object' },
+            temperature: 0.1,
+          }),
+        });
 
-      if (!response.ok) throw new Error(`OpenRouter error: ${response.status}`);
-      const json = await response.json();
-      finalData = parseJSONResponse(json.choices[0]?.message?.content || '', cacheKey);
+        if (!response.ok) throw new Error(`OpenRouter error: ${response.status}`);
+        const json = await response.json();
+        finalData = parseJSONResponse(json.choices[0]?.message?.content || '', cacheKey);
+      } catch (orError: any) {
+        console.warn('OpenRouter failed, falling back to raw RSS:', orError.message);
+        finalData = {
+          points: realNewsItems.map((item) => ({
+            title: item.title || 'News Update',
+            summary: 'Click to read the full story from the source.',
+            sourceName: 'RSS Feed',
+            sourceUrl: item.link || '#',
+          })),
+        };
+      }
     }
 
     // Cache and return
@@ -215,7 +242,6 @@ export const handler: Handler = async (event: HandlerEvent) => {
     const err = error as { message?: string; status?: number };
     console.error('Function Error:', err);
 
-    // Check if it's a quota error (429)
     const isQuotaError =
       err.message?.includes('429') || err.status === 429 || err.message?.includes('quota');
     const statusCode = isQuotaError ? 429 : 500;
