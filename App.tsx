@@ -354,7 +354,7 @@ const App: React.FC = () => {
                   <span className="text-blue-600 dark:text-blue-400">News</span>ator AI
                 </h1>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">
-                  Powered by Gemini
+                  Fast & Free News
                 </p>
               </div>
             </a>
@@ -659,9 +659,6 @@ const App: React.FC = () => {
               Terms of Service
             </a>
           </div>
-          <p className="text-slate-400 dark:text-slate-500 text-xs mt-2 mb-2">
-            Powered by Google Gemini • News via Google Search Grounding
-          </p>
           <p className="text-slate-400 dark:text-slate-500 text-xs mt-2">
             Educational Project • No Cookies • No Tracking
           </p>
