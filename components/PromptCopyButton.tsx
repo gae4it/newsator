@@ -1,20 +1,57 @@
 import React, { useState } from 'react';
 import { Region, NewsCategory, Language, PromptType } from '../types';
 
-interface PromptCopyButtonProps {
+interface PromptActionsProps {
   region: Region;
   category: NewsCategory;
   language: Language;
   promptType: PromptType;
 }
 
-export const PromptCopyButton: React.FC<PromptCopyButtonProps> = ({
+// AI Assistant configurations
+const AI_ASSISTANTS = [
+  {
+    name: 'ChatGPT',
+    url: 'https://chat.openai.com/',
+    icon: '🤖',
+    gradient: 'from-emerald-500 to-teal-600',
+    hoverGradient: 'hover:from-emerald-600 hover:to-teal-700',
+    paramName: 'q',
+  },
+  {
+    name: 'Gemini',
+    url: 'https://aistudio.google.com/prompts/new_chat',
+    icon: '✨',
+    gradient: 'from-blue-500 to-purple-600',
+    hoverGradient: 'hover:from-blue-600 hover:to-purple-700',
+    paramName: 'prompt',
+  },
+  {
+    name: 'Perplexity',
+    url: 'https://www.perplexity.ai/',
+    icon: '🔍',
+    gradient: 'from-cyan-500 to-blue-600',
+    hoverGradient: 'hover:from-cyan-600 hover:to-blue-700',
+    paramName: 'q',
+  },
+  {
+    name: 'Claude',
+    url: 'https://claude.ai/new',
+    icon: '🧠',
+    gradient: 'from-orange-500 to-amber-600',
+    hoverGradient: 'hover:from-orange-600 hover:to-amber-700',
+    paramName: 'q',
+  },
+];
+
+export const PromptActions: React.FC<PromptActionsProps> = ({
   region,
   category,
   language,
   promptType,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [clickedAssistant, setClickedAssistant] = useState<string | null>(null);
 
   const generatePrompt = () => {
     const isTitlesOnly = promptType === PromptType.TITLES;
@@ -69,8 +106,22 @@ export const PromptCopyButton: React.FC<PromptCopyButtonProps> = ({
     }
   };
 
+  const handleAIAssistant = (assistant: (typeof AI_ASSISTANTS)[0]) => {
+    const prompt = generatePrompt();
+    const encodedPrompt = encodeURIComponent(prompt);
+    const url = `${assistant.url}?${assistant.paramName}=${encodedPrompt}`;
+
+    // Visual feedback
+    setClickedAssistant(assistant.name);
+    setTimeout(() => setClickedAssistant(null), 300);
+
+    // Open in new tab
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
-    <div className="flex justify-center w-full mb-8">
+    <div className="flex flex-col items-center w-full mb-8 gap-4">
+      {/* Copy Prompt Button */}
       <button
         onClick={handleCopy}
         className={`
@@ -105,6 +156,40 @@ export const PromptCopyButton: React.FC<PromptCopyButtonProps> = ({
           </>
         )}
       </button>
+
+      {/* AI Assistant Buttons */}
+      <div className="flex flex-col items-center gap-3 w-full max-w-2xl">
+        <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
+          Or send directly to:
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full px-4">
+          {AI_ASSISTANTS.map((assistant) => (
+            <button
+              key={assistant.name}
+              onClick={() => handleAIAssistant(assistant)}
+              className={`
+                group relative flex flex-col items-center gap-2 px-4 py-3 rounded-xl
+                bg-gradient-to-br ${assistant.gradient} ${assistant.hoverGradient}
+                text-white font-semibold text-xs
+                transition-all duration-300
+                hover:shadow-lg hover:-translate-y-1
+                ${clickedAssistant === assistant.name ? 'scale-95' : 'active:scale-95'}
+                shadow-md
+              `}
+              title={`Open in ${assistant.name}`}
+            >
+              <span className="text-2xl">{assistant.icon}</span>
+              <span className="whitespace-nowrap">{assistant.name}</span>
+
+              {/* Subtle shine effect on hover */}
+              <div className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
+
+// Export with old name for backwards compatibility
+export const PromptCopyButton = PromptActions;
