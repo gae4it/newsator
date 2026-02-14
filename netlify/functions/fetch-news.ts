@@ -106,89 +106,82 @@ export const handler: Handler = async (event: HandlerEvent) => {
     const itemCount = 10;
     let finalData;
 
-    // AI LOGIC
-    if (model.includes('Gemini')) {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) throw new Error('GEMINI_API_KEY not found');
+    // 1. Fetch real news from Google News RSS (always do this first for better context and lower quota usage)
+    const query = `${category} ${region}`;
+    const shortLang = language.toLowerCase() === 'italiano' ? 'it' : 'en';
+    const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${shortLang}&gl=${shortLang.toUpperCase()}&ceid=${shortLang.toUpperCase()}:${shortLang}`;
 
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const geminiModelId = 'gemini-2.0-flash'; // Stable GA model ID
-
-      const genModel = genAI.getGenerativeModel({
-        model: geminiModelId,
-        systemInstruction: `You are a professional news aggregator. Output strictly valid JSON. Language: ${language}.`,
-        generationConfig: {
-          responseMimeType: 'application/json',
-        },
-      });
-
-      const promptText = `
-        Latest news for: Region ${region}, Category ${category}, Mode ${mode}.
-        - Language: ${language}
-        - Quantity: ${itemCount} items
-        ${limitedExcludeTitles.length > 0 ? `- IMPORTANT: DO NOT include these stories (they are already shown): [${limitedExcludeTitles.join(', ')}]` : ''}
-        - Format: { "points": [ { "title": "Headline", "summary": "1-2 sentences", "sourceName": "Source", "sourceUrl": "URL" } ] }
-      `;
-
-      const result = await genModel.generateContent({
-        contents: [{ role: 'user', parts: [{ text: promptText }] }],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        tools: [{ googleSearch: {} }] as any,
-      });
-
-      finalData = parseJSONResponse(result.response.text(), cacheKey);
-    } else {
-      // OpenRouter Logic with RSS Bridge
-      const orApiKey = process.env.OPENROUTER_API_KEY;
-      if (!orApiKey) throw new Error('OPENROUTER_API_KEY not found');
-
-      // 1. Fetch real news from Google News RSS
-      const query = `${category} ${region}`;
-      const shortLang = language.toLowerCase() === 'italiano' ? 'it' : 'en';
-      const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${shortLang}&gl=${shortLang.toUpperCase()}&ceid=${shortLang.toUpperCase()}:${shortLang}`;
-
-      const feed = await Promise.race([
+    let feed;
+    try {
+      feed = await Promise.race([
         parser.parseURL(rssUrl),
         new Promise<null>((_, reject) =>
           setTimeout(() => reject(new Error('RSS Fetch Timeout')), 5000)
         ),
       ]);
+    } catch (e) {
+      console.error('RSS Fetch failed:', e);
+      throw new Error('Failed to fetch source news. Please try again later.');
+    }
 
-      if (!feed || !feed.items) throw new Error('Unable to fetch RSS feed items');
+    if (!feed || !feed.items) throw new Error('Unable to fetch news sources');
 
-      // Filter out already shown news
-      const filteredFeedItems = feed.items.filter((item) => {
-        if (!item.title) return false;
-        const cleanTitle = item.title.split(' - ')[0].toLowerCase(); // Basic normalization
-        return !excludeTitles.some(
-          (ex: string) =>
-            ex.toLowerCase().includes(cleanTitle) || cleanTitle.includes(ex.toLowerCase())
-        );
+    // Filter out already shown news
+    const filteredFeedItems = feed.items.filter((item) => {
+      if (!item.title) return false;
+      const cleanTitle = item.title.split(' - ')[0].toLowerCase();
+      return !excludeTitles.some(
+        (ex: string) =>
+          ex.toLowerCase().includes(cleanTitle) || cleanTitle.includes(ex.toLowerCase())
+      );
+    });
+
+    const realNewsItems = filteredFeedItems.slice(0, itemCount).map((item) => ({
+      title: item.title?.substring(0, 150),
+      link: item.link,
+    }));
+
+    if (realNewsItems.length === 0 && !isInitialLoad) {
+      throw new Error('No more new stories found in this category.');
+    }
+
+    const aiPrompt = `
+      MANDATORY TASK: Summarize and format these ${realNewsItems.length} news items into valid JSON.
+      LANGUAGE: All content must be in ${language}.
+      
+      DATA: ${JSON.stringify(realNewsItems)}
+
+      EXPECTED JSON STRUCTURE (STRICT):
+      { "points": [ { "title": "Headline in ${language}", "summary": "1 short sentence in ${language}", "sourceName": "Source", "sourceUrl": "Link" } ] }
+      
+      FINAL RULE: NO preamble, NO extra text, ONLY the JSON object.
+    `;
+
+    // 2. AI LOGIC
+    if (model.includes('Gemini')) {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) throw new Error('GEMINI_API_KEY not found');
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const geminiModelId = 'gemini-2.0-flash'; // Stable model
+
+      const genModel = genAI.getGenerativeModel({
+        model: geminiModelId,
+        systemInstruction: `You are a professional news editor. Output strictly valid JSON. Language: ${language}.`,
+        generationConfig: {
+          responseMimeType: 'application/json',
+        },
       });
 
-      // Take the next 5 items for the AI to summarize
-      const realNewsItems = filteredFeedItems.slice(0, 5).map((item) => ({
-        title: item.title?.substring(0, 150),
-        link: item.link,
-      }));
+      const result = await genModel.generateContent({
+        contents: [{ role: 'user', parts: [{ text: aiPrompt }] }],
+      });
 
-      if (realNewsItems.length === 0 && !isInitialLoad) {
-        throw new Error('No more new stories found in this category.');
-      }
-
-      const orPrompt = `
-        MANDATORY TASK: Summarize and format these ${realNewsItems.length} fresh news items into valid JSON.
-        ${excludeTitles.length > 0 ? 'NOTE: These are different from the ones you already summarized.' : ''}
-        JSON KEY NAME: Use "points" for the array of news.
-        LANGUAGE: All content must be in ${language}.
-        
-        DATA: ${JSON.stringify(realNewsItems)}
-
-        EXPECTED JSON STRUCTURE (STRICT):
-        { "points": [ { "title": "Headline in ${language}", "summary": "1 short sentence in ${language}", "sourceName": "Source", "sourceUrl": "Link" } ] }
-        
-        FINAL RULE: NO preamble, NO extra text, ONLY the JSON object.
-      `;
+      finalData = parseJSONResponse(result.response.text(), cacheKey);
+    } else {
+      // OpenRouter Logic
+      const orApiKey = process.env.OPENROUTER_API_KEY;
+      if (!orApiKey) throw new Error('OPENROUTER_API_KEY not found');
 
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -203,7 +196,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
               : 'meta-llama/llama-3.1-8b-instruct',
           messages: [
             { role: 'system', content: 'Professional news editor. Output JSON only.' },
-            { role: 'user', content: orPrompt },
+            { role: 'user', content: aiPrompt },
           ],
           response_format: { type: 'json_object' },
           temperature: 0.1,
