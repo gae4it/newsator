@@ -172,7 +172,7 @@ const App: React.FC = () => {
   const handleLoadMore = useCallback(async () => {
     if (!selectedCategory || !currentNews || isLoading || isLoadingMore) return;
 
-    const limit = viewMode === ViewMode.OVERVIEW ? 100 : 30;
+    const limit = viewMode === ViewMode.OVERVIEW ? 100 : 50;
     if (currentNews.points.length >= limit) return;
 
     setIsLoadingMore(true);
@@ -191,7 +191,7 @@ const App: React.FC = () => {
       );
 
       if (!data.points || data.points.length === 0) {
-        setError('No more new stories found in the last 24h.');
+        setError('No more new stories found in the last 7 days.');
         return;
       }
 

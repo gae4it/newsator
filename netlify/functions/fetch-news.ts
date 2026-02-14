@@ -105,7 +105,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
     let finalData;
 
     // 1. Fetch real news from Google News RSS (always do this first for better context and lower quota usage)
-    const query = `${category} ${region} when:24h`;
+    const query = `${category} ${region} when:7d`;
     const shortLang = language.toLowerCase() === 'italiano' ? 'it' : 'en';
     const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${shortLang}&gl=${shortLang.toUpperCase()}&ceid=${shortLang.toUpperCase()}:${shortLang}`;
 
