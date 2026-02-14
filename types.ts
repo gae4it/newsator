@@ -31,8 +31,6 @@ export enum PromptType {
 
 export enum AIModel {
   GEMINI = 'Gemini',
-  LLAMA_3 = 'Llama 3',
-  MISTRAL = 'Mistral',
 }
 
 export enum Language {

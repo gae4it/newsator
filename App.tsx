@@ -18,7 +18,6 @@ import { CategorySelector } from './components/CategorySelector';
 import { NewsCardFeed } from './components/NewsCardFeed';
 import { NewsHeadlineRow } from './components/NewsHeadlineRow';
 import { ModeSelector } from './components/ModeSelector';
-import { ModelSelector } from './components/ModelSelector';
 import { LanguageSelector } from './components/LanguageSelector';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
@@ -42,7 +41,6 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.SUMMARY);
-  const [selectedModel, setSelectedModel] = useState<AIModel>(AIModel.GEMINI);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem('language');
     return (saved as Language) || Language.EN;
@@ -155,7 +153,7 @@ const App: React.FC = () => {
           selectedRegion,
           category,
           viewMode,
-          selectedModel,
+          AIModel.GEMINI,
           [],
           selectedLanguage
         );
@@ -168,13 +166,13 @@ const App: React.FC = () => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedRegion, selectedCategory, viewMode, selectedModel, selectedLanguage, appMode]
+    [selectedRegion, selectedCategory, viewMode, selectedLanguage, appMode]
   );
 
   const handleLoadMore = useCallback(async () => {
     if (!selectedCategory || !currentNews || isLoading || isLoadingMore) return;
 
-    const limit = viewMode === ViewMode.OVERVIEW ? 50 : 10;
+    const limit = viewMode === ViewMode.OVERVIEW ? 100 : 30;
     if (currentNews.points.length >= limit) return;
 
     setIsLoadingMore(true);
@@ -187,7 +185,7 @@ const App: React.FC = () => {
         selectedRegion,
         selectedCategory,
         viewMode,
-        selectedModel,
+        AIModel.GEMINI,
         excludeTitles,
         selectedLanguage
       );
@@ -202,7 +200,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [selectedRegion, selectedCategory, viewMode, selectedModel, selectedLanguage]);
+  }, [selectedRegion, selectedCategory, viewMode, selectedLanguage]);
 
   const handleModeChange = useCallback(
     async (mode: ViewMode) => {
@@ -218,7 +216,7 @@ const App: React.FC = () => {
           selectedRegion,
           selectedCategory,
           mode,
-          selectedModel,
+          AIModel.GEMINI,
           [],
           selectedLanguage
         );
@@ -230,36 +228,7 @@ const App: React.FC = () => {
         setIsLoading(false);
       }
     },
-    [selectedRegion, selectedCategory, selectedModel, selectedLanguage]
-  );
-
-  const handleModelChange = useCallback(
-    async (model: AIModel) => {
-      setSelectedModel(model);
-      if (!selectedCategory) return;
-
-      setIsLoading(true);
-      setError(null);
-      setCurrentNews(null);
-
-      try {
-        const data = await fetchNewsSummary(
-          selectedRegion,
-          selectedCategory,
-          viewMode,
-          model,
-          [],
-          selectedLanguage
-        );
-        setCurrentNews(data);
-        setLastUpdated(new Date());
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [selectedRegion, selectedCategory, viewMode, selectedLanguage]
+    [selectedRegion, selectedCategory, selectedLanguage]
   );
 
   const handleRefresh = useCallback(async () => {
@@ -273,7 +242,7 @@ const App: React.FC = () => {
         selectedRegion,
         selectedCategory,
         viewMode,
-        selectedModel,
+        AIModel.GEMINI,
         [],
         selectedLanguage
       );
@@ -284,7 +253,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoadingRSS(false);
     }
-  }, [selectedRegion, selectedCategory, viewMode, selectedModel, selectedLanguage]);
+  }, [selectedRegion, selectedCategory, viewMode, selectedLanguage]);
 
   const handleRSSFetch = useCallback(async (newspaper: Newspaper) => {
     setSelectedNewspaper(newspaper);
@@ -409,21 +378,10 @@ const App: React.FC = () => {
         </>
       )}
 
-      {/* Selectors Bar - Conditional based on mode */}
+      {/* Selectors Bar - Simplified to Mode Only */}
       {appMode === AppMode.READ && (
         <div className="flex flex-col items-center justify-center gap-4 my-6 px-4">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
-            <ModeSelector
-              selectedMode={viewMode}
-              onSelect={handleModeChange}
-              disabled={isLoading}
-            />
-            <ModelSelector
-              selectedModel={selectedModel}
-              onSelect={handleModelChange}
-              disabled={isLoading}
-            />
-          </div>
+          <ModeSelector selectedMode={viewMode} onSelect={handleModeChange} disabled={isLoading} />
         </div>
       )}
 
