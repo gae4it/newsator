@@ -76,8 +76,8 @@ export const handler: Handler = async (event: HandlerEvent) => {
       region,
       category,
       mode = 'Detailed Report',
-      model = 'Gemini 1.5',
-      excludeTitles = [],
+      model = 'Gemini',
+      excludeLinks = [],
       language = 'English',
     } = body;
 
@@ -89,7 +89,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
       };
     }
 
-    const isInitialLoad = excludeTitles.length === 0;
+    const isInitialLoad = excludeLinks.length === 0;
     const cacheKey = `${region}-${category}-${mode}-${model}-${language}`;
     const now = Date.now();
 
@@ -124,19 +124,10 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
     if (!feed || !feed.items) throw new Error('Unable to fetch news sources');
 
-    // Filter out already shown news - use a safer matching logic
+    // Filter out already shown news - use links (URLs) which are 100% unique and stable
     const filteredFeedItems = feed.items.filter((item) => {
-      if (!item.title) return false;
-      const cleanTitle = item.title.split(' - ')[0].trim().toLowerCase();
-
-      return !excludeTitles.some((ex: string) => {
-        const cleanEx = ex.toLowerCase().trim();
-        return (
-          cleanEx === cleanTitle ||
-          (cleanTitle.length > 20 && cleanEx.includes(cleanTitle)) ||
-          (cleanEx.length > 20 && cleanTitle.includes(cleanEx))
-        );
-      });
+      if (!item.link) return false;
+      return !excludeLinks.includes(item.link);
     });
 
     const realNewsItems = filteredFeedItems.slice(0, itemCount).map((item) => ({

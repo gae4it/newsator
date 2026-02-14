@@ -178,7 +178,7 @@ const App: React.FC = () => {
     setIsLoadingMore(true);
     setError(null);
 
-    const excludeTitles = currentNews.points.map((p) => p.title);
+    const excludeLinks = currentNews.points.map((p) => p.sourceUrl);
 
     try {
       const data = await fetchNewsSummary(
@@ -186,7 +186,7 @@ const App: React.FC = () => {
         selectedCategory,
         viewMode,
         AIModel.GEMINI,
-        excludeTitles,
+        excludeLinks,
         selectedLanguage
       );
 
