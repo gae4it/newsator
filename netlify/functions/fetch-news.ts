@@ -112,7 +112,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
       if (!apiKey) throw new Error('GEMINI_API_KEY not found');
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const geminiModelId = 'gemini-2.0-flash-exp'; // Free tier available model
+      const geminiModelId = 'gemini-2.0-flash'; // Stable GA model ID
 
       const genModel = genAI.getGenerativeModel({
         model: geminiModelId,

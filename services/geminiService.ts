@@ -8,7 +8,7 @@ export const fetchNewsSummary = async (
   region: Region,
   category: NewsCategory,
   mode: ViewMode = ViewMode.SUMMARY,
-  model: AIModel = AIModel.GEMINI_1_5,
+  model: AIModel = AIModel.GEMINI_2_0,
   excludeTitles: string[] = [],
   language: Language = Language.EN
 ): Promise<NewsTopic> => {

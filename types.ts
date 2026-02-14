@@ -30,7 +30,6 @@ export enum PromptType {
 }
 
 export enum AIModel {
-  GEMINI_1_5 = 'Gemini 1.5',
   GEMINI_2_0 = 'Gemini 2.0',
   LLAMA_3 = 'Llama 3',
   MISTRAL = 'Mistral',
