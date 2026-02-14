@@ -76,7 +76,7 @@ export const NewsCardFeed: React.FC<NewsCardFeedProps> = ({ newsPoint, category 
           alt={category}
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
           style={{
-            objectPosition: category === NewsCategory.POLITICS ? 'center 15%' : 'center',
+            objectPosition: category === NewsCategory.POLITICS ? 'center 100%' : 'center',
           }}
           onError={(e) => {
             (e.target as HTMLImageElement).style.opacity = '0';

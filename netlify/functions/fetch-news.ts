@@ -162,7 +162,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
       try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const geminiModelId = 'gemini-2.5-flash-lite'; // Best free tier in 2026: 500 RPD
+        const geminiModelId = 'gemini-2.5-flash-lite';
 
         const genModel = genAI.getGenerativeModel({
           model: geminiModelId,
@@ -179,7 +179,6 @@ export const handler: Handler = async (event: HandlerEvent) => {
         finalData = parseJSONResponse(result.response.text(), cacheKey);
       } catch (aiError: any) {
         console.warn('Gemini failed, falling back to raw RSS:', aiError.message);
-        // FALLBACK: Return raw RSS data formatted as AI response if quota is hit
         if (aiError.message?.includes('429') || aiError.message?.includes('quota')) {
           finalData = {
             points: realNewsItems.map((item) => ({
@@ -194,9 +193,12 @@ export const handler: Handler = async (event: HandlerEvent) => {
         }
       }
     } else {
-      // OpenRouter Logic
+      // OpenRouter Logic - Slightly fewer items to prevent timeout
       const orApiKey = process.env.OPENROUTER_API_KEY;
       if (!orApiKey) throw new Error('OPENROUTER_API_KEY not found');
+
+      const orItems = realNewsItems.slice(0, 7); // Safe limit for OpenRouter speed
+      const orPrompt = `Summarize these ${orItems.length} news items into JSON in ${language}. DATA: ${JSON.stringify(orItems)}. Format: { "points": [ { "title": "Headline", "summary": "1 sentence", "sourceName": "Source", "sourceUrl": "Link" } ] }`;
 
       try {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -204,6 +206,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
           headers: {
             Authorization: `Bearer ${orApiKey}`,
             'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://newsator.netlify.app/',
           },
           body: JSON.stringify({
             model:
@@ -211,17 +214,23 @@ export const handler: Handler = async (event: HandlerEvent) => {
                 ? 'mistralai/mistral-7b-instruct'
                 : 'meta-llama/llama-3.1-8b-instruct',
             messages: [
-              { role: 'system', content: 'Professional news editor. Output JSON only.' },
-              { role: 'user', content: aiPrompt },
+              { role: 'system', content: 'Output JSON only.' },
+              { role: 'user', content: orPrompt },
             ],
             response_format: { type: 'json_object' },
             temperature: 0.1,
           }),
         });
 
-        if (!response.ok) throw new Error(`OpenRouter error: ${response.status}`);
+        if (!response.ok) {
+          const errText = await response.text();
+          console.error('OpenRouter Error:', response.status, errText);
+          throw new Error(`OpenRouter error: ${response.status}`);
+        }
+
         const json = await response.json();
-        finalData = parseJSONResponse(json.choices[0]?.message?.content || '', cacheKey);
+        const content = json.choices[0]?.message?.content || '';
+        finalData = parseJSONResponse(content, cacheKey);
       } catch (orError: any) {
         console.warn('OpenRouter failed, falling back to raw RSS:', orError.message);
         finalData = {

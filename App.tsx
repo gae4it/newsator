@@ -42,7 +42,7 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.SUMMARY);
-  const [selectedModel, setSelectedModel] = useState<AIModel>(AIModel.GEMINI_FREE);
+  const [selectedModel, setSelectedModel] = useState<AIModel>(AIModel.GEMINI);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem('language');
     return (saved as Language) || Language.EN;
@@ -600,7 +600,7 @@ const App: React.FC = () => {
                 )}
 
                 {/* Load More Button - Centered below news content */}
-                {currentNews.points.length < (viewMode === ViewMode.OVERVIEW ? 50 : 10) && (
+                {currentNews.points.length > 0 && (
                   <div className="flex justify-center mt-10">
                     <button
                       onClick={handleLoadMore}
@@ -614,8 +614,7 @@ const App: React.FC = () => {
                         </>
                       ) : (
                         <>
-                          <span>➕</span> Load More{' '}
-                          {viewMode === ViewMode.OVERVIEW ? 'Headlines' : 'Cards'}
+                          <span>➕</span> More news
                         </>
                       )}
                     </button>
