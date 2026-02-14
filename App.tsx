@@ -440,7 +440,7 @@ const App: React.FC = () => {
 
       <ProgressBar isLoading={isLoading} />
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-2 py-6">
         {/* RSS Mode Components */}
         {appMode === AppMode.RSS && (
           <div ref={headlinesRef}>

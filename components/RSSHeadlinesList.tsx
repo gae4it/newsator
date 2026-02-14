@@ -24,7 +24,7 @@ export const RSSHeadlinesList: React.FC<RSSHeadlinesListProps> = ({
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-2 py-6">
         <div className="bg-white dark:bg-slate-900/50 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
           <div className="p-6">
             <div className="flex items-center justify-center py-12">
@@ -46,7 +46,7 @@ export const RSSHeadlinesList: React.FC<RSSHeadlinesListProps> = ({
 
   if (headlines.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-2 py-6">
         <div className="bg-white dark:bg-slate-900/50 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
           <div className="p-6">
             <div className="flex flex-col items-center justify-center py-12 opacity-60">
@@ -70,7 +70,7 @@ export const RSSHeadlinesList: React.FC<RSSHeadlinesListProps> = ({
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="max-w-4xl mx-auto px-2 py-6">
       <div className="mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
         <div className="flex flex-col">
           <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
