@@ -30,6 +30,7 @@ import { AppModeSelector } from './components/AppModeSelector';
 import { PromptTypeSelector } from './components/PromptTypeSelector';
 import { NewspaperSelector } from './components/NewspaperSelector';
 import { RSSHeadlinesList } from './components/RSSHeadlinesList';
+import { ScrollToTopButton } from './components/ScrollToTopButton';
 import { NEWSPAPERS } from './newspapers';
 
 const App: React.FC = () => {
@@ -666,6 +667,9 @@ const App: React.FC = () => {
           </p>
         </div>
       </footer>
+
+      {/* Scroll to Top Button */}
+      <ScrollToTopButton />
     </div>
   );
 };

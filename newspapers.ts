@@ -87,7 +87,11 @@ export const NEWSPAPERS: Newspaper[] = [
     url: 'https://www.badische-zeitung.de/index.html',
     rssUrl: 'https://www.badische-zeitung.de/index.html',
     fetchingMethod: 'scraping',
-    selectors: ['.media-box__article .media-box__article__titel h3', 'h3'],
+    selectors: [
+      '.media-box__article .media-box__article__titel h3',
+      'h3',
+      'article-list__item__title',
+    ],
     country: 'DE',
     flag: '🇩🇪',
   },
