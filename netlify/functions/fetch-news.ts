@@ -105,7 +105,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
     let finalData;
 
     // 1. Fetch real news from Google News RSS (always do this first for better context and lower quota usage)
-    const query = `${category} ${region}`;
+    const query = `${category} ${region} when:24h`;
     const shortLang = language.toLowerCase() === 'italiano' ? 'it' : 'en';
     const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${shortLang}&gl=${shortLang.toUpperCase()}&ceid=${shortLang.toUpperCase()}:${shortLang}`;
 
@@ -124,14 +124,19 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
     if (!feed || !feed.items) throw new Error('Unable to fetch news sources');
 
-    // Filter out already shown news
+    // Filter out already shown news - use a safer matching logic
     const filteredFeedItems = feed.items.filter((item) => {
       if (!item.title) return false;
-      const cleanTitle = item.title.split(' - ')[0].toLowerCase();
-      return !excludeTitles.some(
-        (ex: string) =>
-          ex.toLowerCase().includes(cleanTitle) || cleanTitle.includes(ex.toLowerCase())
-      );
+      const cleanTitle = item.title.split(' - ')[0].trim().toLowerCase();
+
+      return !excludeTitles.some((ex: string) => {
+        const cleanEx = ex.toLowerCase().trim();
+        return (
+          cleanEx === cleanTitle ||
+          (cleanTitle.length > 20 && cleanEx.includes(cleanTitle)) ||
+          (cleanEx.length > 20 && cleanTitle.includes(cleanEx))
+        );
+      });
     });
 
     const realNewsItems = filteredFeedItems.slice(0, itemCount).map((item) => ({
@@ -139,8 +144,13 @@ export const handler: Handler = async (event: HandlerEvent) => {
       link: item.link,
     }));
 
-    if (realNewsItems.length === 0 && !isInitialLoad) {
-      throw new Error('No more new stories found in this category.');
+    if (realNewsItems.length === 0) {
+      if (isInitialLoad) {
+        throw new Error(`No recent news found for ${category} in ${region} in the last 24h.`);
+      } else {
+        // For pagination, return an empty set gracefully
+        return { statusCode: 200, headers, body: JSON.stringify({ points: [] }) };
+      }
     }
 
     const aiPrompt = `

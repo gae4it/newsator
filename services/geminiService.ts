@@ -43,7 +43,7 @@ export const fetchNewsSummary = async (
     const data: NewsTopic = await response.json();
 
     // Validate data structure
-    if (!data.points || data.points.length === 0) {
+    if (!data.points || (isInitialLoad && data.points.length === 0)) {
       throw new Error('No news points returned from server');
     }
 

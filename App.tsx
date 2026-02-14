@@ -190,6 +190,11 @@ const App: React.FC = () => {
         selectedLanguage
       );
 
+      if (!data.points || data.points.length === 0) {
+        setError('No more new stories found in the last 24h.');
+        return;
+      }
+
       const updatedPoints = [...currentNews.points, ...data.points];
       setCurrentNews({
         ...currentNews,
